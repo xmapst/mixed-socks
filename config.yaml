@@ -1,0 +1,15 @@
+Host: 0.0.0.0
+Port: 8090
+Log:
+  Level: info
+  #Filename: /var/log/mixed-socks/mixed-socks.log
+  MaxBackups: 7
+  MaxSize: 50   # megabytes
+  MaxAge: 7     # days
+  Compress: true # compress log
+WhiteList:
+  - 192.168.8.0/24
+  - 172.16.0.0/16
+Users:
+  - Username: a
+    Password: b
