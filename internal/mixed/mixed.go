@@ -2,6 +2,7 @@ package mixed
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/pires/go-proxyproto"
 	"github.com/sirupsen/logrus"
@@ -14,6 +15,7 @@ import (
 	"log"
 	"net"
 	"sync"
+	"time"
 )
 
 type Listener struct {
@@ -35,16 +37,26 @@ func (l *Listener) Address() string {
 	return l.tcp.Addr().String()
 }
 
-func (l *Listener) close() error {
-	l.closed = true
-	return l.tcp.Close()
+func (l *Listener) close() {
+	l.closed = l.tcp.Close() == nil && l.udp.Close() == nil
+	return
 }
 
-func (l *Listener) Shutdown(ctx context.Context) error {
-	err := l.close()
-	if err != nil {
-		return err
+func (l *Listener) Running() bool {
+	return !l.closed
+}
+
+func (l *Listener) Shutdown() error {
+	return l.ShutdownWithTimeout(15 * time.Second)
+}
+
+func (l *Listener) ShutdownWithTimeout(timeout time.Duration) error {
+	l.close()
+	if !l.closed {
+		return errors.New("shutdown error")
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	c := make(chan struct{})
 	go func() {
 		defer close(c)

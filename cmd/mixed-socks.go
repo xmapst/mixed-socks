@@ -13,7 +13,6 @@ import (
 	"path"
 	"runtime"
 	"syscall"
-	"time"
 )
 
 var (
@@ -61,9 +60,7 @@ func registerSignalHandlers() {
 	signal.Notify(sigs, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-sigs
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-		defer cancel()
-		err := ml.Shutdown(ctx)
+		err := ml.Shutdown()
 		if err != nil {
 			logrus.Fatalln(err)
 		}

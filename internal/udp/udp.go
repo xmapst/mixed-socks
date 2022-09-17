@@ -6,6 +6,7 @@ import (
 	"github/xmapst/mixed-socks/internal/common"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -23,6 +24,9 @@ func Listen(conn *net.UDPConn) {
 		var data = make([]byte, 8192)
 		n, srcAddr, err := conn.ReadFromUDP(data)
 		if err != nil {
+			if strings.Contains(err.Error(), net.ErrClosed.Error()) {
+				break
+			}
 			logrus.Errorln("READ error", err)
 			continue
 		}
