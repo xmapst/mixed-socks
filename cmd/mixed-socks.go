@@ -94,6 +94,7 @@ func registerSignalHandlers() {
 				logrus.Error(err)
 			}
 		}
+		service.Close()
 		os.Exit(0)
 	}()
 }
