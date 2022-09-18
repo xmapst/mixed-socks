@@ -12,7 +12,6 @@ import (
 	"github/xmapst/mixed-socks/internal/socks5"
 	"github/xmapst/mixed-socks/internal/udp"
 	"io"
-	"log"
 	"net"
 	"sync"
 	"time"
@@ -21,16 +20,14 @@ import (
 type Listener struct {
 	tcp    net.Listener
 	udp    *net.UDPConn
-	addr   string
 	host   string
 	port   int
-	auth   auth.Service
 	closed bool
 	wg     *sync.WaitGroup
 }
 
 func (l *Listener) RawAddress() string {
-	return l.addr
+	return fmt.Sprintf("%s:%d", l.host, l.port)
 }
 
 func (l *Listener) Address() string {
@@ -38,12 +35,23 @@ func (l *Listener) Address() string {
 }
 
 func (l *Listener) close() {
-	l.closed = l.tcp.Close() == nil && l.udp.Close() == nil
+	if l.tcp != nil && l.udp != nil {
+		l.closed = l.tcp.Close() == nil && l.udp.Close() == nil
+		return
+	}
+	if l.tcp != nil {
+		l.closed = l.tcp.Close() == nil
+		return
+	}
+	if l.udp != nil {
+		l.closed = l.udp.Close() == nil
+		return
+	}
 	return
 }
 
 func (l *Listener) Running() bool {
-	return !l.closed
+	return !l.closed && l.tcp != nil && l.udp != nil
 }
 
 func (l *Listener) Shutdown() error {
@@ -62,6 +70,12 @@ func (l *Listener) ShutdownWithTimeout(timeout time.Duration) error {
 		defer close(c)
 		l.wg.Wait()
 	}()
+	defer func() {
+		logrus.Infoln("server closed")
+		l.tcp = nil
+		l.udp = nil
+		time.Sleep(1 * time.Second)
+	}()
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -70,44 +84,39 @@ func (l *Listener) ShutdownWithTimeout(timeout time.Duration) error {
 	}
 }
 
-func New(ctx context.Context, host string, port int, ip auth.Service) (ml *Listener, err error) {
-	addr := fmt.Sprintf("%s:%d", host, port)
-	ml = &Listener{
-		host: host,
-		port: port,
-		addr: addr,
-		auth: ip,
-		wg:   &sync.WaitGroup{},
+func New(host string, port int) *Listener {
+	return &Listener{
+		host:   host,
+		port:   port,
+		closed: true,
 	}
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
-	if err != nil {
-		logrus.Errorln(err)
-		return nil, err
-	}
-	lc := net.ListenConfig{}
-	ml.tcp, err = lc.Listen(ctx, "tcp", tcpAddr.String())
-	if err != nil {
-		logrus.Errorln(err)
-		return nil, err
-	}
-	udpAddr, err := net.ResolveUDPAddr("udp", addr)
-	if err != nil {
-		logrus.Errorln(err)
-		return nil, err
-	}
-	ml.udp, err = net.ListenUDP("udp", udpAddr)
-	if err != nil {
-		logrus.Errorln(err)
-		return nil, err
-	}
-	return ml, err
 }
 
-func (l *Listener) ListenAndServe(auth auth.Service) {
+func (l *Listener) ListenAndServe() (err error) {
+	l.wg = &sync.WaitGroup{}
+	tcpAddr, err := net.ResolveTCPAddr("tcp", l.RawAddress())
+	if err != nil {
+		logrus.Errorln(err)
+		return err
+	}
+	l.tcp, err = net.ListenTCP("tcp", tcpAddr)
+	if err != nil {
+		logrus.Errorln(err)
+		return err
+	}
+	udpAddr, err := net.ResolveUDPAddr("udp", l.RawAddress())
+	if err != nil {
+		logrus.Errorln(err)
+		return err
+	}
+	l.udp, err = net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		logrus.Errorln(err)
+		return err
+	}
 	// udp
 	go func() {
 		logrus.Infoln("listen udp", l.udp.LocalAddr().String())
-		log.Println("Listen udp", l.udp.LocalAddr().String())
 		udp.Listen(l.udp)
 	}()
 	// tcp
@@ -117,28 +126,30 @@ func (l *Listener) ListenAndServe(auth auth.Service) {
 		fmt.Sprintf("socks5://%s", l.Address()),
 	}
 	logrus.Infoln("listen tcp", listenAddr)
-	log.Println("Listen tcp", listenAddr)
 	ln := &proxyproto.Listener{Listener: l.tcp}
+	l.closed = false
 	for {
 		if l.closed {
 			break
 		}
-		conn, err := ln.Accept()
+		var conn net.Conn
+		conn, err = ln.Accept()
 		if err != nil {
 			continue
 		}
 		clientIP := conn.RemoteAddr().String()
-		if !l.auth.Verify(clientIP) {
+		if !auth.VerifyIP(clientIP) {
 			logrus.Warningln(clientIP, "access denied, not in allowed address group")
 			_ = conn.Close()
 		} else {
 			l.wg.Add(1)
-			go l.handle(conn, auth)
+			go l.handle(conn, &auth.User{})
 		}
 	}
+	return nil
 }
 
-func (l *Listener) handle(src net.Conn, auth auth.Service) {
+func (l *Listener) handle(src net.Conn, auth auth.Authenticator) {
 	defer l.wg.Done()
 	buf := make([]byte, 512)
 	// read version
@@ -153,7 +164,7 @@ func (l *Listener) handle(src net.Conn, auth auth.Service) {
 	case socks4.Version:
 		dest = socks4.Handle(src, buf, n, auth)
 	case socks5.Version:
-		dest = socks5.Handle(src, buf, n, auth, l.udp.LocalAddr().String(), l.port)
+		dest = socks5.Handle(src, buf, n, auth, l.udp.LocalAddr().String())
 	default:
 		dest = http.Handle(src, buf, auth)
 	}
@@ -163,5 +174,4 @@ func (l *Listener) handle(src net.Conn, auth auth.Service) {
 	if dest != nil {
 		_ = dest.Close()
 	}
-
 }

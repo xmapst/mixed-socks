@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/rs/xid"
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
@@ -19,7 +18,7 @@ type proxy struct {
 	log  *logrus.Entry
 	src  net.Conn
 	dest net.Conn
-	auth auth.Service
+	auth auth.Authenticator
 	dial common.DialFunc
 }
 
@@ -44,14 +43,13 @@ func (p *proxy) destAddr() string {
 	return ""
 }
 
-func Handle(src net.Conn, buf []byte, auth auth.Service) net.Conn {
+func Handle(src net.Conn, buf []byte, auth auth.Authenticator) net.Conn {
 	d := net.Dialer{Timeout: 10 * time.Second}
-	guid := xid.New()
 	p := &proxy{
 		src:  src,
 		auth: auth,
 		log: logrus.WithFields(logrus.Fields{
-			"uud": guid.String(),
+			"uuid": common.GUID.String(),
 		}),
 		dial: d.Dial,
 	}
@@ -98,7 +96,7 @@ func (p *proxy) handshake(lines []string) (err error) {
 		p.log = p.log.WithField("user", user)
 	}
 	// check username/password
-	if p.auth.Enable() && !p.auth.Verify(user, pass) {
+	if p.auth.Enable() && !p.auth.Verify(user, pass, p.srcAddr()) {
 		_, err = p.src.Write([]byte{0x00, 0xff})
 		if err != nil {
 			p.log.Errorln(err)

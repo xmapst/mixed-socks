@@ -1,0 +1,199 @@
+definitions:
+  api.JSONResult:
+    properties:
+      code:
+        example: 0
+        type: integer
+      data: {}
+      message:
+        example: 消息
+        type: string
+    type: object
+  service.Conf:
+    properties:
+      cidr:
+        items:
+          type: string
+        type: array
+      host:
+        type: string
+      port:
+        type: integer
+    type: object
+  service.User:
+    properties:
+      cidr:
+        items:
+          type: string
+        type: array
+      password:
+        type: string
+      remark:
+        type: string
+      username:
+        type: string
+    required:
+    - username
+    type: object
+info:
+  contact: {}
+  description: support socks4, socks5, http proxy all in one
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Mixed-Socks
+  version: v2.0.0
+paths:
+  /api/config:
+    get:
+      description: get mixed socks config
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      summary: get
+      tags:
+      - Config
+    post:
+      description: update mixed socks config
+      parameters:
+      - description: config
+        in: body
+        name: scripts
+        required: true
+        schema:
+          $ref: '#/definitions/service.Conf'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      summary: save
+      tags:
+      - Config
+  /api/reload:
+    post:
+      description: reload mixed socks config
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      summary: reload
+      tags:
+      - Operate
+  /api/start:
+    post:
+      description: start mixed socks
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      summary: start
+      tags:
+      - Operate
+  /api/state:
+    get:
+      description: get mixed socks state
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      summary: state
+      tags:
+      - Operate
+  /api/stop:
+    post:
+      description: stop mixed socks
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      summary: stop
+      tags:
+      - Operate
+  /api/user:
+    delete:
+      description: delete user
+      parameters:
+      - description: username
+        in: path
+        name: username
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      summary: delete
+      tags:
+      - User
+    get:
+      description: List all user
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      summary: list
+      tags:
+      - User
+    post:
+      description: create or update user
+      parameters:
+      - description: user
+        in: body
+        name: scripts
+        required: true
+        schema:
+          $ref: '#/definitions/service.User'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      summary: save
+      tags:
+      - User
+swagger: "2.0"

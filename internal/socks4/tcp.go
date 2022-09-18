@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/rs/xid"
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
@@ -17,7 +16,7 @@ type proxy struct {
 	log  *logrus.Entry
 	src  net.Conn
 	dest net.Conn
-	auth auth.Service
+	auth auth.Authenticator
 	dial common.DialFunc
 }
 
@@ -59,14 +58,13 @@ byte | 0  |  1  | 2 | 3 | 4 | 5 | 6| 7 |
 	 |0x00|staus| port  |    ip        |
 */
 
-func Handle(src net.Conn, buf []byte, n int, auth auth.Service) net.Conn {
+func Handle(src net.Conn, buf []byte, n int, auth auth.Authenticator) net.Conn {
 	d := net.Dialer{Timeout: 10 * time.Second}
-	guid := xid.New()
 	p := &proxy{
 		src:  src,
 		auth: auth,
 		log: logrus.WithFields(logrus.Fields{
-			"uud": guid.String(),
+			"uuid": common.GUID.String(),
 		}),
 		dial: d.Dial,
 	}
@@ -97,15 +95,11 @@ func (p *proxy) handshake(buf []byte, n int) (target string, err error) {
 		return "", ErrRequestUnknownCode
 	}
 	user := p.readUntilNull(buf[7:])
-	if p.auth.Enable() {
-		ret := p.auth.Verify(
-			user, "",
-		)
-		if !ret {
-			_, _ = p.src.Write([]byte{0x01, 0x00})
-			p.log.Errorln(ErrRequestIdentdMismatched)
-			return "", ErrRequestIdentdMismatched
-		}
+	if p.auth.Enable() && !p.auth.Verify(user, "", p.srcAddr()) {
+		_, _ = p.src.Write([]byte{0x01, 0x00})
+		p.log.Errorln(ErrRequestIdentdMismatched)
+		return "", ErrRequestIdentdMismatched
+
 	}
 	// get port
 	port := binary.BigEndian.Uint16(buf[1:3])

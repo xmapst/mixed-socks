@@ -6,17 +6,21 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github/xmapst/mixed-socks/internal/api"
 	"github/xmapst/mixed-socks/internal/conf"
-	"github/xmapst/mixed-socks/internal/mixed"
+	"github/xmapst/mixed-socks/internal/service"
+	"net/http"
 	"os"
 	"os/signal"
 	"path"
 	"runtime"
 	"syscall"
+	"time"
 )
 
 var (
-	ml     *mixed.Listener
+	//ml     *mixed.Listener
+	server *http.Server
 	Header = figure.NewFigure("MixedSocks", "doom", true).String()
 )
 var cmd = &cobra.Command{
@@ -29,11 +33,25 @@ var cmd = &cobra.Command{
 		if err != nil {
 			return
 		}
-		ml, err = mixed.New(context.Background(), conf.App.Host, conf.App.Port, conf.IPAuth)
+		err = service.New(conf.App.DataDir)
 		if err != nil {
 			return
 		}
-		ml.ListenAndServe(conf.UserAuth)
+		time.Sleep(1 * time.Second)
+		// start http server
+		server = &http.Server{
+			Addr:         fmt.Sprintf("%s:%d", conf.App.Host, conf.App.Port),
+			WriteTimeout: time.Second * 180,
+			ReadTimeout:  time.Second * 180,
+			IdleTimeout:  time.Second * 180,
+			Handler:      api.Handler(),
+		}
+		logrus.Infof("start http server, listen %s", server.Addr)
+		err = server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			logrus.Error(err)
+		}
+		select {}
 	},
 }
 
@@ -51,6 +69,11 @@ func init() {
 	cmd.PersistentFlags().StringVarP(&conf.Path, "config", "c", "config.yaml", "config file path")
 }
 
+// @title Mixed-Socks
+// @description support socks4, socks5, http proxy all in one
+// @version v2.0.0
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 func main() {
 	cobra.CheckErr(cmd.Execute())
 }
@@ -60,9 +83,17 @@ func registerSignalHandlers() {
 	signal.Notify(sigs, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-sigs
-		err := ml.Shutdown()
-		if err != nil {
-			logrus.Fatalln(err)
+		//err := ml.Shutdown()
+		logrus.Infoln("received signal, exiting...")
+		if server != nil {
+			// 关闭http server
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+			defer cancel()
+			err := server.Shutdown(shutdownCtx)
+			if err != nil {
+				logrus.Error(err)
+			}
 		}
+		os.Exit(0)
 	}()
 }

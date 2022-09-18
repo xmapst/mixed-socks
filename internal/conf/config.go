@@ -5,7 +5,6 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github/xmapst/mixed-socks/internal/auth"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 )
@@ -14,16 +13,13 @@ var (
 	App       *Config
 	Path      string
 	LogOutput *lumberjack.Logger
-	IPAuth    = &auth.IPAuth{}
-	UserAuth  = &auth.PasswordAuth{}
 )
 
 type Config struct {
-	Host      string      `yaml:""`
-	Port      int         `yaml:""`
-	Log       Log         `yaml:""`
-	WhiteList []string    `yaml:""`
-	Users     []auth.User `yaml:""`
+	Host    string `yaml:""`
+	Port    int    `yaml:""`
+	DataDir string `yaml:""`
+	Log     Log    `yaml:""`
 }
 
 type Log struct {
@@ -118,22 +114,6 @@ func (c *Config) reload() error {
 	} else {
 		LogOutput = nil
 		logrus.SetOutput(os.Stdout)
-	}
-
-	if c.WhiteList != nil {
-		err = IPAuth.New(c.WhiteList)
-		if err != nil {
-			logrus.Errorln(err)
-			return err
-		}
-	}
-
-	if c.Users != nil {
-		err = UserAuth.New(c.Users)
-		if err != nil {
-			logrus.Errorln(err)
-			return err
-		}
 	}
 	return nil
 }

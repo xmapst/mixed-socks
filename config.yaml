@@ -1,5 +1,6 @@
 Host: 0.0.0.0
-Port: 8090
+Port: 1080
+DataDir: data
 Log:
   Level: info
   #Filename: /var/log/mixed-socks/mixed-socks.log
@@ -7,9 +8,3 @@ Log:
   MaxSize: 50   # megabytes
   MaxAge: 7     # days
   Compress: true # compress log
-WhiteList:
-  - 192.168.8.0/24
-  - 172.16.0.0/16
-Users:
-  - Username: a
-    Password: b

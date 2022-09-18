@@ -4,12 +4,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/rs/xid"
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
 	"io"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -17,10 +17,9 @@ type proxy struct {
 	log  *logrus.Entry
 	src  net.Conn
 	dest net.Conn
-	auth auth.Service
+	auth auth.Authenticator
 	dial common.DialFunc
 	udp  string
-	port int
 }
 
 type DialFunc func(network, addr string) (net.Conn, error)
@@ -68,17 +67,15 @@ byte |0   |  1   | 2  |   3    | 4 | .. | n-2 | n-1 | n |
      |0x05|status|0x00|addrtype|     addr     |  port   |
 */
 
-func Handle(src net.Conn, buf []byte, n int, auth auth.Service, udpAddr string, port int) net.Conn {
+func Handle(src net.Conn, buf []byte, n int, auth auth.Authenticator, udpAddr string) net.Conn {
 	d := net.Dialer{Timeout: 10 * time.Second}
-	guid := xid.New()
 	p := &proxy{
 		src:  src,
 		auth: auth,
 		log: logrus.WithFields(logrus.Fields{
-			"uud": guid.String(),
+			"uuid": common.GUID.String(),
 		}),
 		udp:  udpAddr,
-		port: port,
 		dial: d.Dial,
 	}
 	p.log = p.log.WithField("src", p.srcAddr())
@@ -184,20 +181,13 @@ func (p *proxy) passwordAuth() error {
 	}
 
 	password := buf[p3:p4]
-	if p.auth.Enable() {
-		ret := p.auth.Verify(
-			user, string(password),
-		)
-		if ret {
-			_, _ = p.src.Write([]byte{0x01, 0x00})
-			return nil
-		}
-		_, _ = p.src.Write([]byte{0x01, 0x01})
-		p.log.Errorln("access denied")
-		return errors.New("access denied")
+	if p.auth.Verify(user, string(password), p.srcAddr()) {
+		_, _ = p.src.Write([]byte{0x01, 0x00})
+		return nil
 	}
-	p.log.Errorln("authentication failed")
-	return errors.New("authentication failed")
+	_, _ = p.src.Write([]byte{0x01, 0x01})
+	p.log.Errorln("access denied")
+	return errors.New("access denied")
 }
 
 func (p *proxy) processRequest() {
@@ -287,13 +277,23 @@ func (p *proxy) handleConnectCmd(target string) {
 }
 
 func (p *proxy) handleUdpCmd() {
+	_, port, err := net.SplitHostPort(p.udp)
+	if err != nil {
+		logrus.Errorln(err)
+		return
+	}
+	_port, err := strconv.Atoi(port)
+	if err != nil {
+		logrus.Errorln(err)
+		return
+	}
 	udpAddr, _ := net.ResolveIPAddr("ip", p.udp)
 	hostByte := udpAddr.IP.To4()
 	portByte := make([]byte, 2)
-	binary.BigEndian.PutUint16(portByte, uint16(p.port))
+	binary.BigEndian.PutUint16(portByte, uint16(_port))
 	buf := append([]byte{Version, 0x00, 0x00, 0x01}, hostByte...)
 	buf = append(buf, portByte...)
-	_, err := p.src.Write(buf)
+	_, err = p.src.Write(buf)
 	if err != nil {
 		p.log.Errorln("write response error", err)
 		return
