@@ -255,7 +255,9 @@
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/user/{username}": {
             "delete": {
                 "security": [
                     {
@@ -342,7 +344,7 @@
                         "type": "string"
                     },
                     "example": [
-                        "0.0.0.0"
+                        "0.0.0.0/0"
                     ]
                 },
                 "name": {

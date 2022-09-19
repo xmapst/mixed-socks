@@ -264,7 +264,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/user/{username}": {
             "delete": {
                 "security": [
                     {
@@ -351,7 +353,7 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "example": [
-                        "0.0.0.0"
+                        "0.0.0.0/0"
                     ]
                 },
                 "name": {

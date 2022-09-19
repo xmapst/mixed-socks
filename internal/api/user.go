@@ -1,9 +1,9 @@
 package api
 
 import (
-	"errors"
-	"github.com/gin-gonic/gin"
-	"github/xmapst/mixed-socks/internal/service"
+    "errors"
+    "github.com/gin-gonic/gin"
+    "github/xmapst/mixed-socks/internal/service"
 )
 
 // list
@@ -57,7 +57,7 @@ func saveUser(c *gin.Context) {
 // @Param username path string true "username"
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
-// @Router /api/user [delete]
+// @Router /api/user/{username} [delete]
 func delUser(c *gin.Context) {
 	render := Gin{Context: c}
 	username := c.Param("username")

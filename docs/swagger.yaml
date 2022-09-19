@@ -28,7 +28,7 @@ definitions:
     properties:
       cidr:
         example:
-        - 0.0.0.0
+        - 0.0.0.0/0
         items:
           type: string
         type: array
@@ -165,28 +165,6 @@ paths:
       tags:
       - Operate
   /api/user:
-    delete:
-      description: delete user
-      parameters:
-      - description: username
-        in: path
-        name: username
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.JSONResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.JSONResult'
-      security:
-      - BasicAuth: []
-      summary: delete
-      tags:
-      - User
     get:
       description: List all user
       responses:
@@ -224,6 +202,29 @@ paths:
       security:
       - BasicAuth: []
       summary: save
+      tags:
+      - User
+  /api/user/{username}:
+    delete:
+      description: delete user
+      parameters:
+      - description: username
+        in: path
+        name: username
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
+      summary: delete
       tags:
       - User
 securityDefinitions:
