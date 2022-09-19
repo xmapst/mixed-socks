@@ -13,6 +13,11 @@ const (
 	CmdBind    Command = 2
 )
 
+var cmdMap = map[Command]string{
+	CmdConnect: "CONNECT",
+	CmdBind:    "BIND",
+}
+
 type Code = uint8
 
 const (

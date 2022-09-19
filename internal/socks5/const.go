@@ -9,3 +9,9 @@ const (
 	CmdBind    Command = 2
 	CmdUdp     Command = 3
 )
+
+var cmdMap = map[Command]string{
+	CmdConnect: "CONNECT",
+	CmdBind:    "BIND",
+	CmdUdp:     "UDP",
+}
