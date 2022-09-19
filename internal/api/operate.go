@@ -14,6 +14,7 @@ var ml = &mixed.Listener{}
 // @Summary state
 // @description get mixed socks state
 // @Tags Operate
+// @Security BasicAuth
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
 // @Router /api/state [get]
@@ -30,6 +31,7 @@ func state(c *gin.Context) {
 // @Summary start
 // @description start mixed socks
 // @Tags Operate
+// @Security BasicAuth
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
 // @Router /api/start [post]
@@ -54,6 +56,7 @@ func start(c *gin.Context) {
 // @Summary stop
 // @description stop mixed socks
 // @Tags Operate
+// @Security BasicAuth
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
 // @Router /api/stop [post]
@@ -75,6 +78,7 @@ func stop(c *gin.Context) {
 // @Summary reload
 // @description reload mixed socks config
 // @Tags Operate
+// @Security BasicAuth
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
 // @Router /api/reload [post]

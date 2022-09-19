@@ -10,7 +10,11 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
         "license": {
             "name": "Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -22,6 +26,11 @@ const docTemplate = `{
     "paths": {
         "/api/config": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "get mixed socks config",
                 "tags": [
                     "Config"
@@ -43,6 +52,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "update mixed socks config",
                 "tags": [
                     "Config"
@@ -77,6 +91,11 @@ const docTemplate = `{
         },
         "/api/reload": {
             "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "reload mixed socks config",
                 "tags": [
                     "Operate"
@@ -100,6 +119,11 @@ const docTemplate = `{
         },
         "/api/start": {
             "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "start mixed socks",
                 "tags": [
                     "Operate"
@@ -123,6 +147,11 @@ const docTemplate = `{
         },
         "/api/state": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "get mixed socks state",
                 "tags": [
                     "Operate"
@@ -146,6 +175,11 @@ const docTemplate = `{
         },
         "/api/stop": {
             "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "stop mixed socks",
                 "tags": [
                     "Operate"
@@ -169,6 +203,11 @@ const docTemplate = `{
         },
         "/api/user": {
             "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "List all user",
                 "tags": [
                     "User"
@@ -190,6 +229,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "create or update user",
                 "tags": [
                     "User"
@@ -222,6 +266,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
                 "description": "delete user",
                 "tags": [
                     "User"
@@ -275,38 +324,54 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "0.0.0.0/0"
+                    ]
                 },
                 "host": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "0.0.0.0"
                 },
                 "port": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 8090
                 }
             }
         },
         "service.User": {
             "type": "object",
             "required": [
-                "username"
+                "name"
             ],
             "properties": {
                 "cidr": {
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "0.0.0.0"
+                    ]
                 },
-                "password": {
-                    "type": "string"
+                "name": {
+                    "type": "string",
+                    "example": "name"
+                },
+                "pass": {
+                    "type": "string",
+                    "example": "123456"
                 },
                 "remark": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "小明"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BasicAuth": {
+            "type": "basic"
         }
     }
 }`

@@ -20,7 +20,7 @@ func (u *User) Verify(user, pass, host string) bool {
 		return false
 	}
 	if pass != "" {
-		if res.Password != pass {
+		if res.Pass != pass {
 			return false
 		}
 	}

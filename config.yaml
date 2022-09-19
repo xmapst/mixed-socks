@@ -1,6 +1,8 @@
 Host: 0.0.0.0
-Port: 1080
+Port: 8080
 DataDir: data
+#Auth:
+#  admin: 123456
 Log:
   Level: info
   #Filename: /var/log/mixed-socks/mixed-socks.log

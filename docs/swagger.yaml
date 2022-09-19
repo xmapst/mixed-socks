@@ -12,31 +12,43 @@ definitions:
   service.Conf:
     properties:
       cidr:
+        example:
+        - 0.0.0.0/0
         items:
           type: string
         type: array
       host:
+        example: 0.0.0.0
         type: string
       port:
+        example: 8090
         type: integer
     type: object
   service.User:
     properties:
       cidr:
+        example:
+        - 0.0.0.0
         items:
           type: string
         type: array
-      password:
+      name:
+        example: name
+        type: string
+      pass:
+        example: "123456"
         type: string
       remark:
-        type: string
-      username:
+        example: 小明
         type: string
     required:
-    - username
+    - name
     type: object
 info:
-  contact: {}
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
   description: support socks4, socks5, http proxy all in one
   license:
     name: Apache 2.0
@@ -56,6 +68,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
       summary: get
       tags:
       - Config
@@ -77,6 +91,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
       summary: save
       tags:
       - Config
@@ -92,6 +108,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
       summary: reload
       tags:
       - Operate
@@ -107,6 +125,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
       summary: start
       tags:
       - Operate
@@ -122,6 +142,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
       summary: state
       tags:
       - Operate
@@ -137,6 +159,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
       summary: stop
       tags:
       - Operate
@@ -158,6 +182,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
       summary: delete
       tags:
       - User
@@ -172,6 +198,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
       summary: list
       tags:
       - User
@@ -193,7 +221,12 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
       summary: save
       tags:
       - User
+securityDefinitions:
+  BasicAuth:
+    type: basic
 swagger: "2.0"

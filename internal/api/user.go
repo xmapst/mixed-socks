@@ -10,6 +10,7 @@ import (
 // @Summary list
 // @description List all user
 // @Tags User
+// @Security BasicAuth
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
 // @Router /api/user [get]
@@ -27,6 +28,7 @@ func listUser(c *gin.Context) {
 // @Summary save
 // @description create or update user
 // @Tags User
+// @Security BasicAuth
 // @Param scripts body service.User true "user"
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
@@ -51,6 +53,7 @@ func saveUser(c *gin.Context) {
 // @Summary delete
 // @description delete user
 // @Tags User
+// @Security BasicAuth
 // @Param username path string true "username"
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}

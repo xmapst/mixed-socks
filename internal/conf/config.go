@@ -16,10 +16,11 @@ var (
 )
 
 type Config struct {
-	Host    string `yaml:""`
-	Port    int    `yaml:""`
-	DataDir string `yaml:""`
-	Log     Log    `yaml:""`
+	Host    string            `yaml:""`
+	Port    int               `yaml:""`
+	DataDir string            `yaml:""`
+	Auth    map[string]string `yaml:""`
+	Log     Log               `yaml:""`
 }
 
 type Log struct {

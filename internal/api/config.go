@@ -10,6 +10,7 @@ import (
 // @Summary get
 // @description get mixed socks config
 // @Tags Config
+// @Security BasicAuth
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
 // @Router /api/config [get]
@@ -22,6 +23,7 @@ func getConf(c *gin.Context) {
 // @Summary save
 // @description update mixed socks config
 // @Tags Config
+// @Security BasicAuth
 // @Param scripts body service.Conf true "config"
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}

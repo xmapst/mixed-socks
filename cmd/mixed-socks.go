@@ -31,13 +31,14 @@ var cmd = &cobra.Command{
 		fmt.Print(Header)
 		err := conf.Load()
 		if err != nil {
+			logrus.Fatalln(err)
 			return
 		}
 		err = service.New(conf.App.DataDir)
 		if err != nil {
+			logrus.Fatalln(err)
 			return
 		}
-		time.Sleep(1 * time.Second)
 		// start http server
 		server = &http.Server{
 			Addr:         fmt.Sprintf("%s:%d", conf.App.Host, conf.App.Port),
@@ -72,8 +73,12 @@ func init() {
 // @title Mixed-Socks
 // @description support socks4, socks5, http proxy all in one
 // @version v2.0.0
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @securityDefinitions.basic BasicAuth
 func main() {
 	cobra.CheckErr(cmd.Execute())
 }

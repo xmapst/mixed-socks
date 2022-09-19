@@ -25,8 +25,8 @@ type proxy struct {
 type DialFunc func(network, addr string) (net.Conn, error)
 
 func (p *proxy) srcAddr() string {
-	if p.dest != nil {
-		return p.dest.LocalAddr().String()
+	if p.src != nil {
+		return p.src.RemoteAddr().String()
 	}
 	return ""
 }
@@ -40,7 +40,7 @@ func (p *proxy) proxyAddr() string {
 
 func (p *proxy) destAddr() string {
 	if p.dest != nil {
-		return p.dest.LocalAddr().String()
+		return p.dest.RemoteAddr().String()
 	}
 	return ""
 }
@@ -73,7 +73,7 @@ func Handle(src net.Conn, buf []byte, n int, auth auth.Authenticator, udpAddr st
 		src:  src,
 		auth: auth,
 		log: logrus.WithFields(logrus.Fields{
-			"uuid": common.GUID.String(),
+			"uuid": common.GUID(),
 		}),
 		udp:  udpAddr,
 		dial: d.Dial,

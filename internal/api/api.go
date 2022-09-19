@@ -7,6 +7,9 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	_ "github/xmapst/mixed-socks/docs"
+	"github/xmapst/mixed-socks/internal/conf"
+	"github/xmapst/mixed-socks/internal/mixed"
+	"github/xmapst/mixed-socks/internal/service"
 	"math"
 	"net/http"
 	"time"
@@ -21,6 +24,9 @@ func Handler() *gin.Engine {
 	})
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := engine.Group("api")
+	if conf.App.Auth != nil {
+		api.Use(gin.BasicAuth(conf.App.Auth))
+	}
 	{
 		api.GET("state", state)
 		api.POST("start", start)
@@ -31,7 +37,7 @@ func Handler() *gin.Engine {
 			// detail
 			config.GET("", getConf)
 			// update
-			config.PUT("", saveConf)
+			config.POST("", saveConf)
 		}
 		user := api.Group("user")
 		{
@@ -43,6 +49,14 @@ func Handler() *gin.Engine {
 			user.DELETE(":username", delUser)
 		}
 	}
+	res := service.GetConf()
+	ml = mixed.New(res.Host, res.Port)
+	go func() {
+		err := ml.ListenAndServe()
+		if err != nil {
+			logrus.Errorln(err)
+		}
+	}()
 	return engine
 }
 

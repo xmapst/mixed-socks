@@ -19,10 +19,8 @@ func New(path string) (err error) {
 	var opt = badger.DefaultOptions(path)
 	opt.Logger = logrus.StandardLogger()
 	opt.WithCompression(options.ZSTD)
-	opt.WithSyncWrites(false)
-	opt.WithBlockCacheSize(100 * (1 << 20))
-	opt.WithIndexCacheSize(100 * (1 << 20))
-	opt.WithZSTDCompressionLevel(3)
+	opt.WithSyncWrites(true)
+	opt.WithLoggingLevel(badger.ERROR)
 	db, err = badger.Open(opt)
 	if err != nil {
 		logrus.Errorln(err)
@@ -60,6 +58,9 @@ func Get(key string) (value []byte, err error) {
 	}
 
 	err = db.View(fn)
+	if err == badger.ErrKeyNotFound {
+		return value, nil
+	}
 	return value, err
 }
 
@@ -70,16 +71,16 @@ func Del(key string) error {
 	return db.Update(fn)
 }
 
-func List(keyPrefix string) []byte {
+func List(keyPrefix string) [][]byte {
 	var txn = db.NewTransaction(false)
 	defer txn.Discard()
 	var iter = badger.DefaultIteratorOptions
 	var it = txn.NewIterator(iter)
 	defer it.Close()
-	var value = make([]byte, 0)
+	var value = make([][]byte, 0)
 	for it.Rewind(); it.Valid(); it.Next() {
 		item := it.Item()
-		if bytes.HasPrefix(item.Key(), []byte(keyPrefix)) {
+		if !bytes.HasPrefix(item.Key(), []byte(keyPrefix)) {
 			continue
 		}
 
@@ -87,7 +88,7 @@ func List(keyPrefix string) []byte {
 		if err != nil {
 			continue
 		}
-		value = append(value, res...)
+		value = append(value, res)
 	}
 	return value
 }
