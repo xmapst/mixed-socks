@@ -7,9 +7,10 @@ Log:
   MaxSize: 50   # megabytes
   MaxAge: 7     # days
   Compress: true # compress log
-WhiteList:
-  - 192.168.8.0/24
-  - 172.16.0.0/16
-Users:
-  - Username: a
-    Password: b
+Timeout: 30s
+#WhiteList:
+#  - 192.168.8.0/24
+#  - 172.16.0.0/16
+#Users:
+#  - Username: a
+#    Password: b

@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
+	"github/xmapst/mixed-socks/internal/conf"
 	"io"
 	"net"
 	"strconv"
@@ -25,7 +26,7 @@ type proxy struct {
 
 func (p *proxy) srcAddr() string {
 	if p.src != nil {
-		return p.src.LocalAddr().String()
+		return p.src.RemoteAddr().String()
 	}
 	return ""
 }
@@ -39,13 +40,13 @@ func (p *proxy) proxyAddr() string {
 
 func (p *proxy) destAddr() string {
 	if p.dest != nil {
-		return p.dest.LocalAddr().String()
+		return p.dest.RemoteAddr().String()
 	}
 	return ""
 }
 
 func Handle(src net.Conn, buf []byte, auth auth.Service) net.Conn {
-	d := net.Dialer{Timeout: 10 * time.Second}
+	d := net.Dialer{Timeout: conf.App.ParseTimeout()}
 	guid := xid.New()
 	p := &proxy{
 		src:  src,
@@ -190,7 +191,7 @@ func (p *proxy) httpWriteProxyHeader() {
 func (p *proxy) handleHTTPConnectMethod(addr string, port uint16) {
 	var err error
 	target := fmt.Sprintf("%s:%d", addr, port)
-	p.log = p.log.WithField("target", target)
+	p.log = p.log.WithField("dest", target)
 	p.dest, err = p.dial("tcp", target)
 	if err != nil {
 		_, _ = p.src.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
@@ -210,7 +211,8 @@ func (p *proxy) handleHTTPConnectMethod(addr string, port uint16) {
 func (p *proxy) handleHTTPProxy(addr string, port uint16, line string) {
 	var err error
 	target := fmt.Sprintf("%s:%d", addr, port)
-	p.log = p.log.WithField("target", target)
+	p.log = p.log.WithField("dest", target)
+	p.log.Info("establish connection")
 	p.dest, err = p.dial("tcp", target)
 	if err != nil {
 		p.log.Errorln("connect dist error", err)

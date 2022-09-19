@@ -8,6 +8,7 @@ import (
 	"github/xmapst/mixed-socks/internal/auth"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
+	"time"
 )
 
 var (
@@ -22,6 +23,7 @@ type Config struct {
 	Host      string      `yaml:""`
 	Port      int         `yaml:""`
 	Log       Log         `yaml:""`
+	Timeout   string      `yaml:""`
 	WhiteList []string    `yaml:""`
 	Users     []auth.User `yaml:""`
 }
@@ -136,4 +138,12 @@ func (c *Config) reload() error {
 		}
 	}
 	return nil
+}
+
+func (c *Config) ParseTimeout() time.Duration {
+	t, err := time.ParseDuration(c.Timeout)
+	if err != nil {
+		return 30 * time.Second
+	}
+	return t
 }

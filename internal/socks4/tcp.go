@@ -8,9 +8,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
+	"github/xmapst/mixed-socks/internal/conf"
 	"io"
 	"net"
-	"time"
 )
 
 type proxy struct {
@@ -22,8 +22,8 @@ type proxy struct {
 }
 
 func (p *proxy) srcAddr() string {
-	if p.dest != nil {
-		return p.dest.LocalAddr().String()
+	if p.src != nil {
+		return p.src.RemoteAddr().String()
 	}
 	return ""
 }
@@ -37,7 +37,7 @@ func (p *proxy) proxyAddr() string {
 
 func (p *proxy) destAddr() string {
 	if p.dest != nil {
-		return p.dest.LocalAddr().String()
+		return p.dest.RemoteAddr().String()
 	}
 	return ""
 }
@@ -60,7 +60,7 @@ byte | 0  |  1  | 2 | 3 | 4 | 5 | 6| 7 |
 */
 
 func Handle(src net.Conn, buf []byte, n int, auth auth.Service) net.Conn {
-	d := net.Dialer{Timeout: 10 * time.Second}
+	d := net.Dialer{Timeout: conf.App.ParseTimeout()}
 	guid := xid.New()
 	p := &proxy{
 		src:  src,
@@ -143,9 +143,10 @@ func (p *proxy) handshake(buf []byte, n int) (target string, err error) {
 }
 
 func (p *proxy) processRequest(target string) {
-	p.log = p.log.WithField("target", target)
-	// connect to the target
 	var err error
+	p.log = p.log.WithField("dest", target)
+	p.log.Info("establish connection")
+	// connect to the target
 	p.dest, err = p.dial("tcp", target)
 	if err != nil {
 		// connection failed
