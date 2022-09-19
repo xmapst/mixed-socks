@@ -71,6 +71,7 @@ func Handle(src net.Conn, buf []byte, n int, auth auth.Service) net.Conn {
 		dial: d.Dial,
 	}
 	p.log = p.log.WithField("src", p.srcAddr())
+	p.log.Info("request service using socks4 protocol")
 	target, err := p.handshake(buf, n)
 	if err != nil {
 		return p.dest
@@ -90,7 +91,7 @@ func (p *proxy) handshake(buf []byte, n int) (target string, err error) {
 	}
 	buf = buf[1:n]
 	command := buf[0]
-	p.log = p.log.WithField("command", command)
+	p.log = p.log.WithField("command", cmdMap[command])
 	// command only support connect
 	if command != CmdConnect {
 		logrus.Errorln(ErrRequestUnknownCode)

@@ -57,6 +57,7 @@ func Handle(src net.Conn, buf []byte, auth auth.Service) net.Conn {
 		dial: d.Dial,
 	}
 	p.log = p.log.WithField("src", p.srcAddr())
+	p.log.Info("request service using http protocol")
 	lines, err := p.readString(buf, "\r\n")
 	if err != nil {
 		p.log.Errorln(err)

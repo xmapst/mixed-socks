@@ -252,7 +252,7 @@ func (p *proxy) processRequest() {
 
 	// target address
 	target := net.JoinHostPort(host, fmt.Sprintf("%d", port))
-	p.log = p.log.WithField("command", buf[1])
+	p.log = p.log.WithField("command", cmdMap[buf[1]])
 	// command support connect
 	switch buf[1] {
 	case CmdUdp:
@@ -270,6 +270,7 @@ func (p *proxy) handleConnectCmd(target string) {
 	p.log.Info("establish connection")
 	// connect to the target
 	p.dest, err = p.dial("tcp", target)
+	p.log.Info("request service using socks5 protocol")
 	if err != nil {
 		// connection failed
 		_, _ = p.src.Write([]byte{0x05, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01})
