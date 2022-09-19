@@ -14,64 +14,62 @@ import (
 	"time"
 )
 
-type proxy struct {
-	log  *logrus.Entry
-	src  net.Conn
-	dest net.Conn
-	auth auth.Authenticator
-	dial common.DialFunc
+type Proxy struct {
+	Log  *logrus.Entry
+	Src  net.Conn
+	Dest net.Conn
+	Auth auth.Authenticator
+	Dial common.DialFunc
 }
 
-func (p *proxy) srcAddr() string {
-	if p.src != nil {
-		return p.src.RemoteAddr().String()
+func (p *Proxy) srcAddr() string {
+	if p.Src != nil {
+		return p.Src.RemoteAddr().String()
 	}
 	return ""
 }
 
-func (p *proxy) proxyAddr() string {
-	if p.dest != nil {
-		return p.dest.LocalAddr().String()
+func (p *Proxy) proxyAddr() string {
+	if p.Dest != nil {
+		return p.Dest.LocalAddr().String()
 	}
 	return ""
 }
 
-func (p *proxy) destAddr() string {
-	if p.dest != nil {
-		return p.dest.RemoteAddr().String()
+func (p *Proxy) destAddr() string {
+	if p.Dest != nil {
+		return p.Dest.RemoteAddr().String()
 	}
 	return ""
 }
 
-func Handle(src net.Conn, buf []byte, auth auth.Authenticator) net.Conn {
-	d := net.Dialer{Timeout: 10 * time.Second}
-	p := &proxy{
-		src:  src,
-		auth: auth,
-		log: logrus.WithFields(logrus.Fields{
-			"uuid": common.GUID(),
-		}),
-		dial: d.Dial,
-	}
-	p.log = p.log.WithField("src", p.srcAddr())
+func (p *Proxy) SrcConn() net.Conn {
+	return p.Src
+}
+func (p *Proxy) DestConn() net.Conn {
+	return p.Dest
+}
+
+func (p *Proxy) Handle(buf []byte, _ int) {
+	p.Log = p.Log.WithField("src", p.srcAddr())
 	lines, err := p.readString(buf, "\r\n")
 	if err != nil {
-		p.log.Errorln(err)
-		return p.dest
+		p.Log.Errorln(err)
+		return
 	}
 	if len(lines) < 2 {
-		p.log.Errorln("request line error")
-		return p.dest
+		p.Log.Errorln("request line error")
+		return
 	}
 	err = p.handshake(lines)
 	if err != nil {
-		return p.dest
+		return
 	}
 	p.processRequest(lines)
-	return p.dest
+	return
 }
 
-func (p *proxy) handshake(lines []string) (err error) {
+func (p *Proxy) handshake(lines []string) (err error) {
 	var user, pass string
 	for _, line := range lines {
 		// get username/password
@@ -79,7 +77,7 @@ func (p *proxy) handshake(lines []string) (err error) {
 			line = strings.TrimPrefix(line, ProxyAuthorization)
 			bs, err := base64.StdEncoding.DecodeString(line)
 			if err != nil {
-				p.log.Errorln(err)
+				p.Log.Errorln(err)
 				continue
 			}
 			if bs == nil {
@@ -93,31 +91,31 @@ func (p *proxy) handshake(lines []string) (err error) {
 		}
 	}
 	if user != "" {
-		p.log = p.log.WithField("user", user)
+		p.Log = p.Log.WithField("user", user)
 	}
 	// check username/password
-	if p.auth.Enable() && !p.auth.Verify(user, pass, p.srcAddr()) {
-		_, err = p.src.Write([]byte{0x00, 0xff})
+	if p.Auth.Enable() && !p.Auth.Verify(user, pass, p.srcAddr()) {
+		_, err = p.Src.Write([]byte{0x00, 0xff})
 		if err != nil {
-			p.log.Errorln(err)
+			p.Log.Errorln(err)
 			return err
 		}
-		p.log.Errorln("authentication failed")
+		p.Log.Errorln("authentication failed")
 		return err
 	}
 	return nil
 }
 
-func (p *proxy) processRequest(lines []string) {
+func (p *Proxy) processRequest(lines []string) {
 	requestLine := strings.Split(lines[0], " ")
 	if len(requestLine) < 3 {
-		p.log.Errorln("request line error")
+		p.Log.Errorln("request line error")
 		return
 	}
 	method := requestLine[0]
 	requestTarget := requestLine[1]
 	version := requestLine[2]
-	p.log = p.log.WithField("command", method)
+	p.Log = p.Log.WithField("command", method)
 	if method == HTTPCONNECT {
 		shp := strings.Split(requestTarget, ":")
 		addr := shp[0]
@@ -128,8 +126,8 @@ func (p *proxy) processRequest(lines []string) {
 		si := strings.Index(requestTarget, "//")
 		restUrl := requestTarget[si+2:]
 		if restUrl == "" {
-			_, _ = p.src.Write([]byte("HTTP/1.0 404 Not Found\r\n\r\n"))
-			p.log.Errorln("404 Not Found")
+			_, _ = p.Src.Write([]byte("HTTP/1.0 404 Not Found\r\n\r\n"))
+			p.Log.Errorln("404 Not Found")
 			return
 		}
 		port := 80
@@ -161,74 +159,76 @@ func (p *proxy) processRequest(lines []string) {
 	}
 }
 
-func (p *proxy) httpWriteProxyHeader() {
-	_, err := p.src.Write([]byte("HTTP/1.1 200 OK Connection Established\r\n"))
+func (p *Proxy) httpWriteProxyHeader() {
+	_, err := p.Src.Write([]byte("HTTP/1.1 200 OK Connection Established\r\n"))
 	if err != nil {
 		logrus.Warningln(err)
 		return
 	}
 
-	_, err = p.src.Write([]byte(fmt.Sprintf("Date: %s\r\n", time.Now().Format(time.RFC1123))))
+	_, err = p.Src.Write([]byte(fmt.Sprintf("Date: %s\r\n", time.Now().Format(time.RFC1123))))
 	if err != nil {
 		logrus.Warningln(err)
 		return
 	}
-	_, err = p.src.Write([]byte("Transfer-Encoding: chunked\r\n"))
+	_, err = p.Src.Write([]byte("Transfer-Encoding: chunked\r\n"))
 	if err != nil {
 		logrus.Warningln(err)
 		return
 	}
-	_, err = p.src.Write([]byte("\r\n"))
+	_, err = p.Src.Write([]byte("\r\n"))
 	if err != nil {
 		logrus.Warningln(err)
 		return
 	}
 }
 
-func (p *proxy) handleHTTPConnectMethod(addr string, port uint16) {
+func (p *Proxy) handleHTTPConnectMethod(addr string, port uint16) {
 	var err error
 	target := fmt.Sprintf("%s:%d", addr, port)
-	p.log = p.log.WithField("target", target)
-	p.dest, err = p.dial("tcp", target)
+	p.Log = p.Log.WithField("target", target)
+	p.Log.Info("establish connection")
+	p.Dest, err = p.Dial("tcp", target)
 	if err != nil {
-		_, _ = p.src.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
-		p.log.Errorln("connect dist error", err)
+		_, _ = p.Src.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+		p.Log.Errorln("connect dist error", err)
 		return
 	}
 
-	p.log = p.log.WithField("proxy", p.proxyAddr())
-	p.log = p.log.WithField("dest", p.destAddr())
+	p.Log = p.Log.WithField("proxy", p.proxyAddr())
+	p.Log = p.Log.WithField("dest", p.destAddr())
 	p.httpWriteProxyHeader()
-	p.log.Infoln("connection established")
-	common.Forward(p.src, p.dest)
+	p.Log.Infoln("connection established")
+	common.Forward(p.Src, p.Dest)
 	return
 }
 
 // Subsequent request lines are full paths, some servers may have problems
-func (p *proxy) handleHTTPProxy(addr string, port uint16, line string) {
+func (p *Proxy) handleHTTPProxy(addr string, port uint16, line string) {
 	var err error
 	target := fmt.Sprintf("%s:%d", addr, port)
-	p.log = p.log.WithField("target", target)
-	p.dest, err = p.dial("tcp", target)
+	p.Log = p.Log.WithField("dest", target)
+	p.Log.Info("establish connection")
+	p.Dest, err = p.Dial("tcp", target)
 	if err != nil {
-		p.log.Errorln("connect dist error", err)
+		p.Log.Errorln("connect dist error", err)
 		return
 	}
 
-	p.log = p.log.WithField("proxy", p.proxyAddr())
-	p.log = p.log.WithField("dest", p.destAddr())
-	_, err = p.dest.Write([]byte(line))
+	p.Log = p.Log.WithField("proxy", p.proxyAddr())
+	p.Log = p.Log.WithField("dest", p.destAddr())
+	_, err = p.Dest.Write([]byte(line))
 	if err != nil {
-		p.log.Errorln("write  response error", err)
+		p.Log.Errorln("write  response error", err)
 		return
 	}
-	p.log.Infoln("connection established")
-	common.Forward(p.src, p.dest)
+	p.Log.Infoln("connection established")
+	common.Forward(p.Src, p.Dest)
 	return
 }
 
-func (p *proxy) readString(buf []byte, delim string) ([]string, error) {
-	_, err := io.ReadAtLeast(p.src, buf, 0)
+func (p *Proxy) readString(buf []byte, delim string) ([]string, error) {
+	_, err := io.ReadAtLeast(p.Src, buf, 0)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}

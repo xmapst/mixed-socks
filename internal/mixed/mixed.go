@@ -7,7 +7,8 @@ import (
 	"github.com/pires/go-proxyproto"
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
-	"github/xmapst/mixed-socks/internal/http"
+	"github/xmapst/mixed-socks/internal/common"
+	"github/xmapst/mixed-socks/internal/service"
 	"github/xmapst/mixed-socks/internal/socks4"
 	"github/xmapst/mixed-socks/internal/socks5"
 	"github/xmapst/mixed-socks/internal/udp"
@@ -158,20 +159,27 @@ func (l *Listener) handle(src net.Conn, auth auth.Authenticator) {
 		logrus.Errorln(err)
 		return
 	}
-	var dest net.Conn
+	d := net.Dialer{Timeout: service.GetConf().ParseTimeout()}
+	log := logrus.WithFields(logrus.Fields{
+		"uuid": common.GUID(),
+	})
+	var proxy Proxy
 	ver := buf[0]
 	switch ver {
 	case socks4.Version:
-		dest = socks4.Handle(src, buf, n, auth)
+		proxy = newSocks4(src, auth, log, d.Dial)
 	case socks5.Version:
-		dest = socks5.Handle(src, buf, n, auth, l.udp.LocalAddr().String())
+		proxy = newSocks5(src, auth, log, d.Dial, l.udp.LocalAddr().String())
 	default:
-		dest = http.Handle(src, buf, auth)
+		proxy = newHttp(src, auth, log, d.Dial)
 	}
-	if src != nil {
-		_ = src.Close()
-	}
-	if dest != nil {
-		_ = dest.Close()
-	}
+	defer func() {
+		if proxy.SrcConn() != nil {
+			_ = proxy.SrcConn().Close()
+		}
+		if proxy.DestConn() != nil {
+			_ = proxy.DestConn().Close()
+		}
+	}()
+	proxy.Handle(buf, n)
 }

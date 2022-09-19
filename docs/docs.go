@@ -338,6 +338,10 @@ const docTemplate = `{
                 "port": {
                     "type": "integer",
                     "example": 8090
+                },
+                "timeout": {
+                    "type": "string",
+                    "example": "30s"
                 }
             }
         },

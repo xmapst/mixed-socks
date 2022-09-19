@@ -23,6 +23,9 @@ definitions:
       port:
         example: 8090
         type: integer
+      timeout:
+        example: 30s
+        type: string
     type: object
   service.User:
     properties:

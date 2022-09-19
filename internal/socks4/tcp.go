@@ -9,36 +9,42 @@ import (
 	"github/xmapst/mixed-socks/internal/common"
 	"io"
 	"net"
-	"time"
 )
 
-type proxy struct {
-	log  *logrus.Entry
-	src  net.Conn
-	dest net.Conn
-	auth auth.Authenticator
-	dial common.DialFunc
+type Proxy struct {
+	Log  *logrus.Entry
+	Src  net.Conn
+	Dest net.Conn
+	Auth auth.Authenticator
+	Dial common.DialFunc
 }
 
-func (p *proxy) srcAddr() string {
-	if p.src != nil {
-		return p.src.RemoteAddr().String()
+func (p *Proxy) srcAddr() string {
+	if p.Src != nil {
+		return p.Src.RemoteAddr().String()
 	}
 	return ""
 }
 
-func (p *proxy) proxyAddr() string {
-	if p.dest != nil {
-		return p.dest.LocalAddr().String()
+func (p *Proxy) proxyAddr() string {
+	if p.Dest != nil {
+		return p.Dest.LocalAddr().String()
 	}
 	return ""
 }
 
-func (p *proxy) destAddr() string {
-	if p.dest != nil {
-		return p.dest.RemoteAddr().String()
+func (p *Proxy) destAddr() string {
+	if p.Dest != nil {
+		return p.Dest.RemoteAddr().String()
 	}
 	return ""
+}
+
+func (p *Proxy) SrcConn() net.Conn {
+	return p.Src
+}
+func (p *Proxy) DestConn() net.Conn {
+	return p.Dest
 }
 
 /*
@@ -58,46 +64,37 @@ byte | 0  |  1  | 2 | 3 | 4 | 5 | 6| 7 |
 	 |0x00|staus| port  |    ip        |
 */
 
-func Handle(src net.Conn, buf []byte, n int, auth auth.Authenticator) net.Conn {
-	d := net.Dialer{Timeout: 10 * time.Second}
-	p := &proxy{
-		src:  src,
-		auth: auth,
-		log: logrus.WithFields(logrus.Fields{
-			"uuid": common.GUID(),
-		}),
-		dial: d.Dial,
-	}
-	p.log = p.log.WithField("src", p.srcAddr())
+func (p *Proxy) Handle(buf []byte, n int) {
+	p.Log = p.Log.WithField("src", p.srcAddr())
 	target, err := p.handshake(buf, n)
 	if err != nil {
-		return p.dest
+		return
 	}
 	p.processRequest(target)
-	return p.dest
+	return
 }
 
-func (p *proxy) handshake(buf []byte, n int) (target string, err error) {
+func (p *Proxy) handshake(buf []byte, n int) (target string, err error) {
 	if n < 8 {
-		n1, err := io.ReadAtLeast(p.src, buf[n:], 8-n)
+		n1, err := io.ReadAtLeast(p.Src, buf[n:], 8-n)
 		if err != nil {
-			p.log.Errorln(ErrRequestRejected, err)
+			p.Log.Errorln(ErrRequestRejected, err)
 			return "", ErrRequestRejected
 		}
 		n += n1
 	}
 	buf = buf[1:n]
 	command := buf[0]
-	p.log = p.log.WithField("command", command)
+	p.Log = p.Log.WithField("command", cmdMap[command])
 	// command only support connect
 	if command != CmdConnect {
 		logrus.Errorln(ErrRequestUnknownCode)
 		return "", ErrRequestUnknownCode
 	}
 	user := p.readUntilNull(buf[7:])
-	if p.auth.Enable() && !p.auth.Verify(user, "", p.srcAddr()) {
-		_, _ = p.src.Write([]byte{0x01, 0x00})
-		p.log.Errorln(ErrRequestIdentdMismatched)
+	if p.Auth.Enable() && !p.Auth.Verify(user, "", p.srcAddr()) {
+		_, _ = p.Src.Write([]byte{0x01, 0x00})
+		p.Log.Errorln(ErrRequestIdentdMismatched)
 		return "", ErrRequestIdentdMismatched
 
 	}
@@ -136,30 +133,31 @@ func (p *proxy) handshake(buf []byte, n int) (target string, err error) {
 	return net.JoinHostPort(host, fmt.Sprintf("%d", port)), nil
 }
 
-func (p *proxy) processRequest(target string) {
-	p.log = p.log.WithField("target", target)
-	// connect to the target
+func (p *Proxy) processRequest(target string) {
 	var err error
-	p.dest, err = p.dial("tcp", target)
+	p.Log = p.Log.WithField("dest", target)
+	p.Log.Info("establish connection")
+	// connect to the target
+	p.Dest, err = p.Dial("tcp", target)
 	if err != nil {
 		// connection failed
-		_, _ = p.src.Write([]byte{0x00, 0x5b, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00})
-		p.log.Errorln(ErrRequestIdentdFailed, err)
+		_, _ = p.Src.Write([]byte{0x00, 0x5b, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00})
+		p.Log.Errorln(ErrRequestIdentdFailed, err)
 		return
 	}
-	p.log = p.log.WithField("proxy", p.proxyAddr())
-	p.log = p.log.WithField("dest", p.destAddr())
-	_, err = p.src.Write([]byte{0x00, 0x5A, 0x00, 0x00, 0, 0, 0, 0})
+	p.Log = p.Log.WithField("proxy", p.proxyAddr())
+	p.Log = p.Log.WithField("dest", p.destAddr())
+	_, err = p.Src.Write([]byte{0x00, 0x5A, 0x00, 0x00, 0, 0, 0, 0})
 	if err != nil {
-		p.log.Errorln("write  response error", err)
+		p.Log.Errorln("write  response error", err)
 		return
 	}
 
-	p.log.Infoln("connection established")
-	common.Forward(p.src, p.dest)
+	p.Log.Infoln("connection established")
+	common.Forward(p.Src, p.Dest)
 }
 
-func (p *proxy) readUntilNull(src []byte) string {
+func (p *Proxy) readUntilNull(src []byte) string {
 	buf := &bytes.Buffer{}
 	for _, v := range src {
 		if v == 0 {
