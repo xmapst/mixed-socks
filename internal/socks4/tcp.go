@@ -66,7 +66,7 @@ func Handle(src net.Conn, buf []byte, n int, auth auth.Service) net.Conn {
 		src:  src,
 		auth: auth,
 		log: logrus.WithFields(logrus.Fields{
-			"uud": guid.String(),
+			"uuid": guid.String(),
 		}),
 		dial: d.Dial,
 	}
