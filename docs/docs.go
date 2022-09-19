@@ -360,6 +360,10 @@ const docTemplate = `{
                         "0.0.0.0/0"
                     ]
                 },
+                "disabled": {
+                    "type": "boolean",
+                    "example": false
+                },
                 "name": {
                     "type": "string",
                     "example": "name"

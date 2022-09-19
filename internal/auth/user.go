@@ -19,6 +19,9 @@ func (u *User) Verify(user, pass, host string) bool {
 	if res == nil {
 		return false
 	}
+	if res.Disabled {
+		return false
+	}
 	if pass != "" {
 		if res.Pass != pass {
 			return false
@@ -44,6 +47,16 @@ func (u *User) Verify(user, pass, host string) bool {
 
 func (u *User) Enable() bool {
 	res, _ := service.ListUser()
+	if res == nil {
+		return false
+	}
+	var _res []service.User
+	for _, v := range res {
+		if v.Disabled {
+			continue
+		}
+		_res = append(_res, v)
+	}
 	if res == nil {
 		return false
 	}

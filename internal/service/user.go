@@ -7,10 +7,11 @@ import (
 const userKeyPrefix = globalPrefix + ":user"
 
 type User struct {
-	Name   string   `json:"name" form:"name" binding:"required" description:"用户名" example:"name"`
-	Pass   string   `json:"pass" form:"pass" description:"密码(sock4下不生效)" example:"123456"`
-	CIDR   []string `json:"cidr" form:"cidr" description:"白名单" example:"0.0.0.0/0"`
-	Remark string   `json:"remark" form:"remark" description:"备注" example:"小明"`
+	Name     string   `json:"name" form:"name" binding:"required" description:"用户名" example:"name"`
+	Pass     string   `json:"pass" form:"pass" description:"密码(sock4下不生效)" example:"123456"`
+	CIDR     []string `json:"cidr" form:"cidr" description:"白名单" example:"0.0.0.0/0"`
+	Remark   string   `json:"remark" form:"remark" description:"备注" example:"小明"`
+	Disabled bool     `json:"disabled" form:"disabled" description:"禁用" example:"false"`
 }
 
 func SaveUser(auth *User) (err error) {

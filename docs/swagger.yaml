@@ -35,6 +35,9 @@ definitions:
         items:
           type: string
         type: array
+      disabled:
+        example: false
+        type: boolean
       name:
         example: name
         type: string
