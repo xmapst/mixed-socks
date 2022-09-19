@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/dgraph-io/badger/v3/options"
 	jsoniter "github.com/json-iterator/go"
@@ -71,24 +70,20 @@ func Del(key string) error {
 	return db.Update(fn)
 }
 
-func List(keyPrefix string) [][]byte {
-	var txn = db.NewTransaction(false)
-	defer txn.Discard()
-	var iter = badger.DefaultIteratorOptions
-	var it = txn.NewIterator(iter)
-	defer it.Close()
+func List(prefix string) [][]byte {
 	var value = make([][]byte, 0)
-	for it.Rewind(); it.Valid(); it.Next() {
-		item := it.Item()
-		if !bytes.HasPrefix(item.Key(), []byte(keyPrefix)) {
-			continue
+	_ = db.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		for it.Seek([]byte(prefix)); it.ValidForPrefix([]byte(prefix)); it.Next() {
+			item := it.Item()
+			_value, err := item.ValueCopy(nil)
+			if err != nil {
+				continue
+			}
+			value = append(value, _value)
 		}
-
-		res, err := item.ValueCopy(nil)
-		if err != nil {
-			continue
-		}
-		value = append(value, res)
-	}
+		return nil
+	})
 	return value
 }

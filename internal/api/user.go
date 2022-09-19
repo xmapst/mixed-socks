@@ -1,9 +1,9 @@
 package api
 
 import (
-    "errors"
-    "github.com/gin-gonic/gin"
-    "github/xmapst/mixed-socks/internal/service"
+	"errors"
+	"github.com/gin-gonic/gin"
+	"github/xmapst/mixed-socks/internal/service"
 )
 
 // list

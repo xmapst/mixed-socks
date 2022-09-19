@@ -23,7 +23,7 @@ func SaveUser(auth *User) (err error) {
 }
 
 func DelUser(username string) (err error) {
-    var key = userKeyPrefix + ":" + username
+	var key = userKeyPrefix + ":" + username
 	err = Del(key)
 	if err != nil {
 		logrus.Errorln(err)
