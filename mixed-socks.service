@@ -1,0 +1,16 @@
+[Unit]
+Description=Mixed-socks - Support socks4, socks4a, socks5, socks5h, http proxy all in one
+Documentation=https://github.com/xmapst/mixed-socks
+After=network.target nss-lookup.target
+
+[Service]
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ExecStart=/usr/local/bin/mixed-socks -c /etc/mixed-socks.yaml
+Restart=on-failure
+RestartSec=10s
+LimitNOFILE=infinity
+
+[Install]
+WantedBy=multi-user.target
