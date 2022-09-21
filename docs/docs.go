@@ -24,6 +24,71 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/auth": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "get user auth state",
+                "tags": [
+                    "User"
+                ],
+                "summary": "Auth",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "enable user auth",
+                "tags": [
+                    "User"
+                ],
+                "summary": "Auth",
+                "parameters": [
+                    {
+                        "description": "user auth",
+                        "name": "auth",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.Auth"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
         "/api/config": {
             "get": {
                 "security": [
@@ -242,7 +307,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "user",
-                        "name": "scripts",
+                        "name": "user",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -389,6 +454,15 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "消息"
+                }
+            }
+        },
+        "service.Auth": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },

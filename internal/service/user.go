@@ -4,7 +4,35 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const userKeyPrefix = globalPrefix + ":user"
+type Auth struct {
+	Enabled bool `json:"enabled" form:"name" description:"启用" example:"false"`
+}
+
+func (a *Auth) Save() (err error) {
+	var key = UserTablePrefix + "_" + "auth"
+	err = set(key, a)
+	if err != nil {
+		logrus.Error(err)
+	}
+	return
+}
+
+func (a *Auth) Get() bool {
+	var key = UserTablePrefix + "_" + "auth"
+	data, err := get(key)
+	if err != nil {
+		logrus.Errorln(err)
+		return false
+	}
+	if data == nil {
+		return false
+	}
+	err = json.Unmarshal(data, a)
+	if err != nil {
+		logrus.Errorln(err)
+	}
+	return a.Enabled
+}
 
 type User struct {
 	Name     string   `json:"name" form:"name" binding:"required" description:"用户名" example:"name"`
@@ -14,34 +42,33 @@ type User struct {
 	Disabled bool     `json:"disabled" form:"disabled" description:"禁用" example:"false"`
 }
 
-func SaveUser(auth *User) (err error) {
-	var key = userKeyPrefix + ":" + auth.Name
-	err = Set(key, auth)
+func (u *User) Save() (err error) {
+	var key = UserTablePrefix + ":" + u.Name
+	err = set(key, u)
 	if err != nil {
 		logrus.Error(err)
 	}
 	return
 }
 
-func DelUser(username string) (err error) {
-	var key = userKeyPrefix + ":" + username
-	err = Del(key)
+func (u *User) Delete() (err error) {
+	var key = UserTablePrefix + ":" + u.Name
+	err = del(key)
 	if err != nil {
 		logrus.Errorln(err)
 	}
 	return
 }
 
-func ListUser() (res []User, err error) {
-	var data = List(userKeyPrefix)
+func (u *User) List() (res []User, err error) {
+	var data = list(UserTablePrefix)
 	if data == nil {
 		return nil, nil
 	}
 	for _, v := range data {
 		var _res User
 		err = json.Unmarshal(v, &_res)
-		if err != nil {
-			logrus.Errorln(err)
+		if err != nil || _res.Name == "" {
 			continue
 		}
 		res = append(res, _res)
@@ -49,20 +76,19 @@ func ListUser() (res []User, err error) {
 	return
 }
 
-func GetUser(username string) (res *User) {
-	var key = userKeyPrefix + ":" + username
-	data, err := Get(key)
+func (u *User) Get() (*User, error) {
+	var key = UserTablePrefix + ":" + u.Name
+	data, err := get(key)
 	if err != nil {
 		logrus.Errorln(err)
-		return
+		return nil, err
 	}
 	if data == nil {
-		return
+		return nil, nil
 	}
-	res = new(User)
-	err = json.Unmarshal(data, res)
+	err = json.Unmarshal(data, u)
 	if err != nil {
 		logrus.Errorln(err)
 	}
-	return
+	return u, err
 }

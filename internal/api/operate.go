@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/mixed"
-	"github/xmapst/mixed-socks/internal/service"
 )
 
 var ml = &mixed.Listener{}
@@ -36,8 +35,7 @@ func start(c *gin.Context) {
 		render.SetJson(ml.State())
 		return
 	}
-	res := service.GetConf()
-	ml = mixed.New(res.Host, res.Port)
+	ml = mixed.New()
 	go func() {
 		err := ml.ListenAndServe()
 		if err != nil {
@@ -86,9 +84,7 @@ func reload(c *gin.Context) {
 			return
 		}
 	}
-
-	res := service.GetConf()
-	ml = mixed.New(res.Host, res.Port)
+	ml = mixed.New()
 	err := ml.ListenAndServe()
 	if err != nil {
 		render.SetError(CodeErrMsg, err)

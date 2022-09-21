@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github/xmapst/mixed-socks/internal/common"
 	"github/xmapst/mixed-socks/internal/service"
 	"net/http"
 )
@@ -15,7 +16,12 @@ import (
 // @Failure 500 {object} JSONResult{}
 // @Router /api/config [get]
 func getConf(c *gin.Context) {
-	res := service.GetConf()
+	conf := &service.Conf{
+		Host:    common.DefaultHost,
+		Port:    common.DefaultPort,
+		Timeout: common.DefaultTimeout,
+	}
+	res := conf.Get()
 	c.SecureJSON(http.StatusOK, res)
 }
 
@@ -30,13 +36,17 @@ func getConf(c *gin.Context) {
 // @Router /api/config [post]
 func saveConf(c *gin.Context) {
 	var render = Gin{c}
-	var req = &service.Conf{}
+	var req = &service.Conf{
+		Host:    common.DefaultHost,
+		Port:    common.DefaultPort,
+		Timeout: common.DefaultTimeout,
+	}
 	err := c.ShouldBind(req)
 	if err != nil {
 		render.SetError(CodeErrParam, err)
 		return
 	}
-	err = service.SaveConf(req)
+	err = req.Save()
 	if err != nil {
 		render.SetError(CodeErrParam, err)
 		return

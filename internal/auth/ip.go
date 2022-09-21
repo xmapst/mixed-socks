@@ -11,10 +11,15 @@ func VerifyIP(addr string) bool {
 	if err != nil {
 		host = addr
 	}
-	cidr := service.GetConf().CIDR
+	conf := &service.Conf{}
+	cidr := conf.Get().CIDR
 	if len(cidr) == 0 {
 		return true
 	}
+	return verifyCIDR(host, cidr)
+}
+
+func verifyCIDR(host string, cidr []string) bool {
 	src := net.ParseIP(host)
 	for _, ipMask := range cidr {
 		if ip := net.ParseIP(ipMask); ip != nil {

@@ -13,6 +13,7 @@ Usage:
 Flags:
   -c, --config string   config file path (default "config.yaml")
   -h, --help            help for ./mixed-socks
+  -v, --version         version for ./mixed-socks
 ```
 
 ## Build

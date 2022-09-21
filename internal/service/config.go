@@ -7,15 +7,13 @@ import (
 
 type Conf struct {
 	Host    string   `json:"host" description:"监听地址" example:"0.0.0.0"`
-	Port    int      `json:"port" description:"监听端口" example:"8090"`
+	Port    int64    `json:"port" description:"监听端口" example:"8090"`
 	CIDR    []string `json:"cidr" description:"白名单" example:"0.0.0.0/0"`
 	Timeout string   `json:"timeout" description:"超时时间" example:"30s"`
 }
 
-const configKey = globalPrefix + ":config"
-
-func SaveConf(data *Conf) error {
-	err := Set(configKey, data)
+func (c *Conf) Save() error {
+	err := set(ConfigTablePrefix, c)
 	if err != nil {
 		logrus.Errorln(err)
 		return err
@@ -23,26 +21,20 @@ func SaveConf(data *Conf) error {
 	return nil
 }
 
-func GetConf() (conf *Conf) {
-	conf = &Conf{
-		Host:    "0.0.0.0",
-		Port:    8090,
-		Timeout: "30s",
-	}
-	value, err := Get(configKey)
+func (c *Conf) Get() *Conf {
+	value, err := get(ConfigTablePrefix)
 	if err != nil {
 		logrus.Errorln(err)
-		return
+		return c
 	}
 	if value == nil {
-		return
+		return c
 	}
-	conf = new(Conf)
-	err = json.Unmarshal(value, conf)
+	err = json.Unmarshal(value, c)
 	if err != nil {
 		logrus.Errorln(err)
 	}
-	return
+	return c
 }
 
 func (c *Conf) ParseTimeout() time.Duration {

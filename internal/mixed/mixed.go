@@ -22,7 +22,7 @@ type Listener struct {
 	tcp    net.Listener
 	udp    *net.UDPConn
 	host   string
-	port   int
+	port   int64
 	closed bool
 	wg     *sync.WaitGroup
 }
@@ -85,10 +85,16 @@ func (l *Listener) ShutdownWithTimeout(timeout time.Duration) error {
 	}
 }
 
-func New(host string, port int) *Listener {
+func New() *Listener {
+	_conf := &service.Conf{
+		Host:    common.DefaultHost,
+		Port:    common.DefaultPort,
+		Timeout: common.DefaultTimeout,
+	}
+	res := _conf.Get()
 	return &Listener{
-		host:   host,
-		port:   port,
+		host:   res.Host,
+		port:   res.Port,
 		closed: true,
 	}
 }
@@ -146,7 +152,7 @@ func (l *Listener) ListenAndServe() (err error) {
 				_ = conn.Close()
 			} else {
 				l.wg.Add(1)
-				go l.handle(conn, &auth.User{})
+				go l.handle(conn)
 			}
 		}
 	}()
@@ -154,7 +160,7 @@ func (l *Listener) ListenAndServe() (err error) {
 	return nil
 }
 
-func (l *Listener) handle(src net.Conn, auth auth.Authenticator) {
+func (l *Listener) handle(src net.Conn) {
 	defer l.wg.Done()
 	buf := make([]byte, 512)
 	// read version
@@ -163,19 +169,24 @@ func (l *Listener) handle(src net.Conn, auth auth.Authenticator) {
 		logrus.Errorln(err)
 		return
 	}
-	d := net.Dialer{Timeout: service.GetConf().ParseTimeout()}
+	conf := &service.Conf{
+		Host: "0.0.0.0",
+		Port: 8090,
+	}
+	d := net.Dialer{Timeout: conf.Get().ParseTimeout()}
 	log := logrus.WithFields(logrus.Fields{
 		"uuid": common.GUID(),
 	})
 	var proxy Proxy
+	var _auth = &auth.Auth{}
 	ver := buf[0]
 	switch ver {
 	case socks4.Version:
-		proxy = newSocks4(src, auth, log, d.Dial)
+		proxy = newSocks4(src, _auth, log, d.Dial)
 	case socks5.Version:
-		proxy = newSocks5(src, auth, log, d.Dial, l.udp.LocalAddr().String())
+		proxy = newSocks5(src, _auth, log, d.Dial, l.udp.LocalAddr().String())
 	default:
-		proxy = newHttp(src, auth, log, d.Dial)
+		proxy = newHttp(src, _auth, log, d.Dial)
 	}
 	defer func() {
 		if proxy.SrcConn() != nil {

@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/service"
-	"net"
 )
 
 type Authenticator interface {
@@ -11,54 +9,32 @@ type Authenticator interface {
 	Enable() bool
 }
 
-type User struct {
+type Auth struct {
 }
 
-func (u *User) Verify(user, pass, host string) bool {
-	res := service.GetUser(user)
-	if res == nil {
+func (a *Auth) Verify(u, p, h string) bool {
+	user := &service.User{
+		Name: u,
+	}
+	res, err := user.Get()
+	if res == nil || err != nil {
 		return false
 	}
 	if res.Disabled {
 		return false
 	}
-	if pass != "" {
-		if res.Pass != pass {
+	if p != "" {
+		if res.Pass != p {
 			return false
 		}
 	}
-	src := net.ParseIP(host)
-	for _, ipMask := range res.CIDR {
-		if ip := net.ParseIP(ipMask); ip != nil {
-			if ip.Equal(src) {
-				return true
-			}
-		} else if _, ipNet, err := net.ParseCIDR(ipMask); err != nil {
-			logrus.Errorln(err)
-			continue
-		} else {
-			if ipNet.Contains(src) {
-				return true
-			}
-		}
+	if res.CIDR == nil {
+		return true
 	}
-	return true
+	return verifyCIDR(h, res.CIDR)
 }
 
-func (u *User) Enable() bool {
-	res, _ := service.ListUser()
-	if res == nil {
-		return false
-	}
-	var _res []service.User
-	for _, v := range res {
-		if v.Disabled {
-			continue
-		}
-		_res = append(_res, v)
-	}
-	if res == nil {
-		return false
-	}
-	return true
+func (a *Auth) Enable() bool {
+	auth := &service.Auth{}
+	return auth.Get()
 }

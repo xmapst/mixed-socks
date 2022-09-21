@@ -12,7 +12,13 @@ var (
 	json = jsoniter.ConfigCompatibleWithStandardLibrary
 )
 
-const globalPrefix = "mixed-socks:global"
+// <Database>:<TableName>:<FiledName>
+
+const (
+	DBPrefix          = "mixed-socks"
+	ConfigTablePrefix = DBPrefix + ":" + "config"
+	UserTablePrefix   = DBPrefix + ":" + "user"
+)
 
 func New(path string) (err error) {
 	var opt = badger.DefaultOptions(path)
@@ -34,7 +40,7 @@ func Close() {
 	}
 }
 
-func Set(key string, data interface{}) error {
+func set(key string, data interface{}) error {
 	value, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -45,7 +51,7 @@ func Set(key string, data interface{}) error {
 	return db.Update(fn)
 }
 
-func Get(key string) (value []byte, err error) {
+func get(key string) (value []byte, err error) {
 	var fn = func(tx *badger.Txn) error {
 		var item *badger.Item
 		item, err = tx.Get([]byte(key))
@@ -63,14 +69,14 @@ func Get(key string) (value []byte, err error) {
 	return value, err
 }
 
-func Del(key string) error {
+func del(key string) error {
 	var fn = func(tx *badger.Txn) error {
 		return tx.Delete([]byte(key))
 	}
 	return db.Update(fn)
 }
 
-func List(prefix string) [][]byte {
+func list(prefix string) [][]byte {
 	var value = make([][]byte, 0)
 	_ = db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)

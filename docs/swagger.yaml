@@ -41,6 +41,12 @@ definitions:
         example: 消息
         type: string
     type: object
+  service.Auth:
+    properties:
+      enabled:
+        example: false
+        type: boolean
+    type: object
   service.Conf:
     properties:
       cidr:
@@ -94,6 +100,46 @@ info:
   title: Mixed-Socks
   version: v2.0.0
 paths:
+  /api/auth:
+    get:
+      description: get user auth state
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
+      summary: Auth
+      tags:
+      - User
+    post:
+      description: enable user auth
+      parameters:
+      - description: user auth
+        in: body
+        name: auth
+        required: true
+        schema:
+          $ref: '#/definitions/service.Auth'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
+      summary: Auth
+      tags:
+      - User
   /api/config:
     get:
       description: get mixed socks config
@@ -224,7 +270,7 @@ paths:
       parameters:
       - description: user
         in: body
-        name: scripts
+        name: user
         required: true
         schema:
           $ref: '#/definitions/service.User'

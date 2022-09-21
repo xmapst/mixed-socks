@@ -11,7 +11,6 @@ import (
 	_ "github/xmapst/mixed-socks/docs"
 	"github/xmapst/mixed-socks/internal/conf"
 	"github/xmapst/mixed-socks/internal/mixed"
-	"github/xmapst/mixed-socks/internal/service"
 	"math"
 	"net/http"
 	"time"
@@ -42,6 +41,10 @@ func Handler() *gin.Engine {
 			// update
 			config.POST("", saveConf)
 		}
+		// get auth state
+		api.GET("auth", getAuth)
+		// enable auth
+		api.POST("auth", enableAuth)
 		user := api.Group("user")
 		{
 			// list
@@ -52,8 +55,7 @@ func Handler() *gin.Engine {
 			user.DELETE(":username", delUser)
 		}
 	}
-	res := service.GetConf()
-	ml = mixed.New(res.Host, res.Port)
+	ml = mixed.New()
 	err := ml.ListenAndServe()
 	if err != nil {
 		logrus.Fatalln(err)
