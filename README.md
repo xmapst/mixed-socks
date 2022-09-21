@@ -23,3 +23,7 @@ git clone https://github.com/xmapst/mixed-socks.git
 cd mixed-socks
 make
 ```
+
+## Swagger
+
+![Swagger](https://raw.githubusercontent.com/xmapst/mixed-socks/main/swagger.png)
