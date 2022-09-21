@@ -30,10 +30,8 @@ func Handler() *gin.Engine {
 		api.Use(gin.BasicAuth(conf.App.Auth))
 	}
 	{
-		api.GET("state", state)
-		api.POST("start", start)
-		api.POST("stop", stop)
-		api.POST("reload", reload)
+		api.GET("server/state", state)
+		api.POST("server", operate)
 		config := api.Group("config")
 		{
 			// detail

@@ -154,46 +154,26 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/reload": {
+        "/api/server": {
             "post": {
                 "security": [
                     {
                         "BasicAuth": []
                     }
                 ],
-                "description": "reload mixed socks config",
+                "description": "Operate mixed socks server",
                 "tags": [
-                    "Operate"
+                    "Server"
                 ],
-                "summary": "reload",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.JSONResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.JSONResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/start": {
-            "post": {
-                "security": [
+                "summary": "Operate",
+                "parameters": [
                     {
-                        "BasicAuth": []
+                        "type": "string",
+                        "description": "operate [start,stop,reload]",
+                        "name": "operate",
+                        "in": "query"
                     }
                 ],
-                "description": "start mixed socks",
-                "tags": [
-                    "Operate"
-                ],
-                "summary": "start",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -217,39 +197,11 @@ const docTemplate = `{
                         "BasicAuth": []
                     }
                 ],
-                "description": "get mixed socks state",
+                "description": "mixed socks server state",
                 "tags": [
-                    "Operate"
+                    "Server"
                 ],
-                "summary": "state",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.JSONResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.JSONResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/stop": {
-            "post": {
-                "security": [
-                    {
-                        "BasicAuth": []
-                    }
-                ],
-                "description": "stop mixed socks",
-                "tags": [
-                    "Operate"
-                ],
-                "summary": "stop",
+                "summary": "State",
                 "responses": {
                     "200": {
                         "description": "OK",

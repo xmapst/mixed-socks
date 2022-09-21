@@ -180,9 +180,14 @@ paths:
       summary: save
       tags:
       - Config
-  /api/reload:
+  /api/server:
     post:
-      description: reload mixed socks config
+      description: Operate mixed socks server
+      parameters:
+      - description: operate [start,stop,reload]
+        in: query
+        name: operate
+        type: string
       responses:
         "200":
           description: OK
@@ -194,29 +199,12 @@ paths:
             $ref: '#/definitions/api.JSONResult'
       security:
       - BasicAuth: []
-      summary: reload
+      summary: Operate
       tags:
-      - Operate
-  /api/start:
-    post:
-      description: start mixed socks
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.JSONResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.JSONResult'
-      security:
-      - BasicAuth: []
-      summary: start
-      tags:
-      - Operate
+      - Server
   /api/state:
     get:
-      description: get mixed socks state
+      description: mixed socks server state
       responses:
         "200":
           description: OK
@@ -228,26 +216,9 @@ paths:
             $ref: '#/definitions/api.JSONResult'
       security:
       - BasicAuth: []
-      summary: state
+      summary: State
       tags:
-      - Operate
-  /api/stop:
-    post:
-      description: stop mixed socks
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.JSONResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.JSONResult'
-      security:
-      - BasicAuth: []
-      summary: stop
-      tags:
-      - Operate
+      - Server
   /api/user:
     get:
       description: List all user
