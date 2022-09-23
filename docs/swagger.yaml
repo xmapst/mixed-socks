@@ -116,7 +116,7 @@ paths:
       - BasicAuth: []
       summary: Auth
       tags:
-      - User
+      - Auth
     post:
       description: enable user auth
       parameters:
@@ -139,7 +139,7 @@ paths:
       - BasicAuth: []
       summary: Auth
       tags:
-      - User
+      - Auth
   /api/config:
     get:
       description: get mixed socks config
@@ -181,10 +181,26 @@ paths:
       tags:
       - Config
   /api/server:
+    get:
+      description: mixed socks server state
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
+      summary: State
+      tags:
+      - Server
     post:
       description: Operate mixed socks server
       parameters:
-      - description: operate [start,stop,reload]
+      - description: operate [start,stop,restart]
         in: query
         name: operate
         type: string
@@ -200,23 +216,6 @@ paths:
       security:
       - BasicAuth: []
       summary: Operate
-      tags:
-      - Server
-  /api/state:
-    get:
-      description: mixed socks server state
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.JSONResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.JSONResult'
-      security:
-      - BasicAuth: []
-      summary: State
       tags:
       - Server
   /api/user:
@@ -260,7 +259,7 @@ paths:
       tags:
       - User
   /api/user/{username}:
-    delete:
+    post:
       description: delete user
       parameters:
       - description: username

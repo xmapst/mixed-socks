@@ -30,8 +30,13 @@ func Handler() *gin.Engine {
 		api.Use(gin.BasicAuth(conf.App.Auth))
 	}
 	{
-		api.GET("server/state", state)
-		api.POST("server", operate)
+		server := api.Group("server")
+		{
+			// get server state
+			server.GET("", state)
+			// start/stop/restart server
+			server.POST("", operate)
+		}
 		config := api.Group("config")
 		{
 			// detail
@@ -39,10 +44,13 @@ func Handler() *gin.Engine {
 			// update
 			config.POST("", saveConf)
 		}
-		// get auth state
-		api.GET("auth", getAuth)
-		// enable auth
-		api.POST("auth", enableAuth)
+		auth := api.Group("auth")
+		{
+			// get auth state
+			auth.GET("", getAuth)
+			// enable auth
+			auth.POST("", postAuth)
+		}
 		user := api.Group("user")
 		{
 			// list
@@ -50,7 +58,7 @@ func Handler() *gin.Engine {
 			// add
 			user.POST("", saveUser)
 			// del
-			user.DELETE(":username", delUser)
+			user.POST(":username", delUser)
 		}
 	}
 	ml = mixed.New()

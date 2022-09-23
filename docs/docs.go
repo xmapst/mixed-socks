@@ -33,7 +33,7 @@ const docTemplate = `{
                 ],
                 "description": "get user auth state",
                 "tags": [
-                    "User"
+                    "Auth"
                 ],
                 "summary": "Auth",
                 "responses": {
@@ -59,7 +59,7 @@ const docTemplate = `{
                 ],
                 "description": "enable user auth",
                 "tags": [
-                    "User"
+                    "Auth"
                 ],
                 "summary": "Auth",
                 "parameters": [
@@ -155,25 +155,17 @@ const docTemplate = `{
             }
         },
         "/api/server": {
-            "post": {
+            "get": {
                 "security": [
                     {
                         "BasicAuth": []
                     }
                 ],
-                "description": "Operate mixed socks server",
+                "description": "mixed socks server state",
                 "tags": [
                     "Server"
                 ],
-                "summary": "Operate",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "operate [start,stop,reload]",
-                        "name": "operate",
-                        "in": "query"
-                    }
-                ],
+                "summary": "State",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -188,20 +180,26 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/api/state": {
-            "get": {
+            },
+            "post": {
                 "security": [
                     {
                         "BasicAuth": []
                     }
                 ],
-                "description": "mixed socks server state",
+                "description": "Operate mixed socks server",
                 "tags": [
                     "Server"
                 ],
-                "summary": "State",
+                "summary": "Operate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "operate [start,stop,restart]",
+                        "name": "operate",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -284,7 +282,7 @@ const docTemplate = `{
             }
         },
         "/api/user/{username}": {
-            "delete": {
+            "post": {
                 "security": [
                     {
                         "BasicAuth": []

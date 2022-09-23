@@ -15,7 +15,7 @@ var ml = &mixed.Listener{}
 // @Security BasicAuth
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
-// @Router /api/state [get]
+// @Router /api/server [get]
 func state(c *gin.Context) {
 	render := Gin{c}
 	render.SetJson(ml.State())
@@ -26,7 +26,7 @@ func state(c *gin.Context) {
 // @description Operate mixed socks server
 // @Tags Server
 // @Security BasicAuth
-// @Param operate query string false "operate [start,stop,reload]"
+// @Param operate query string false "operate [start,stop,restart]"
 // @Success 200 {object} JSONResult{}
 // @Failure 500 {object} JSONResult{}
 // @Router /api/server [post]
@@ -44,7 +44,7 @@ func operate(c *gin.Context) {
 			render.SetError(CodeErrNotRunning, err)
 			return
 		}
-	case "reload":
+	case "restart":
 		if ml.State() {
 			err := ml.Shutdown()
 			if err != nil {
