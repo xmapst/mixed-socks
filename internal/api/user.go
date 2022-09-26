@@ -63,7 +63,7 @@ func delUser(c *gin.Context) {
 	render := Gin{Context: c}
 	username := c.Param("username")
 	if username == "" || username == ":username" {
-		render.SetError(CodeErrParam, errors.New("missing id parameter"))
+		render.SetError(CodeErrParam, errors.New("missing username parameter"))
 		return
 	}
 	user := &service.User{

@@ -7,11 +7,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
+	"github/xmapst/mixed-socks/internal/statistic"
 	"io"
 	"net"
 )
 
 type Proxy struct {
+	UUID string
 	Log  *logrus.Entry
 	Src  net.Conn
 	Dest net.Conn
@@ -154,7 +156,18 @@ func (p *Proxy) processRequest(target string) {
 	}
 
 	p.Log.Infoln("connection established")
-	common.Forward(p.Src, p.Dest)
+	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
+	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
+	common.Forward(p.Src, p.Dest, &statistic.Metadata{
+		UUID:     p.UUID,
+		NetWork:  statistic.TCP,
+		Type:     statistic.SOCKS4,
+		SrcIP:    srcIP,
+		SrcPort:  srcPort,
+		DestIP:   destIP,
+		DestPort: destPort,
+		Host:     target,
+	})
 }
 
 func (p *Proxy) readUntilNull(src []byte) string {

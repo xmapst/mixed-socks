@@ -9,6 +9,7 @@ import (
 	"github/xmapst/mixed-socks/internal/api"
 	"github/xmapst/mixed-socks/internal/conf"
 	"github/xmapst/mixed-socks/internal/service"
+	"github/xmapst/mixed-socks/internal/statistic"
 	"net/http"
 	"os"
 	"os/signal"
@@ -39,6 +40,7 @@ var cmd = &cobra.Command{
 			logrus.Fatalln(err)
 			return
 		}
+		statistic.NewManager()
 		handler := api.Handler()
 		handler.Use(info.StaticFile("/"))
 		// start http server

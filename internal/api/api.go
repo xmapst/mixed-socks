@@ -30,6 +30,12 @@ func Handler() *gin.Engine {
 		api.Use(gin.BasicAuth(conf.App.Auth))
 	}
 	{
+		connection := api.Group("connections")
+		{
+			connection.GET("", connections)
+			connection.POST("", closeAllConnections)
+			connection.POST(":id", closeConnection)
+		}
 		server := api.Group("server")
 		{
 			// get server state

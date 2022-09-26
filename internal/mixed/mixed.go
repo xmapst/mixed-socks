@@ -174,27 +174,16 @@ func (l *Listener) handle(src net.Conn) {
 		Port: 8090,
 	}
 	d := net.Dialer{Timeout: conf.Get().ParseTimeout()}
-	log := logrus.WithFields(logrus.Fields{
-		"uuid": common.GUID(),
-	})
 	var proxy Proxy
 	var _auth = &auth.Auth{}
 	ver := buf[0]
 	switch ver {
 	case socks4.Version:
-		proxy = newSocks4(src, _auth, log, d.Dial)
+		proxy = newSocks4(src, _auth, d.Dial)
 	case socks5.Version:
-		proxy = newSocks5(src, _auth, log, d.Dial, l.udp.LocalAddr().String())
+		proxy = newSocks5(src, _auth, d.Dial, l.udp.LocalAddr().String())
 	default:
-		proxy = newHttp(src, _auth, log, d.Dial)
+		proxy = newHttp(src, _auth, d.Dial)
 	}
-	defer func() {
-		if proxy.SrcConn() != nil {
-			_ = proxy.SrcConn().Close()
-		}
-		if proxy.DestConn() != nil {
-			_ = proxy.DestConn().Close()
-		}
-	}()
 	proxy.Handle(buf, n)
 }

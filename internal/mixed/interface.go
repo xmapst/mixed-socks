@@ -16,8 +16,13 @@ type Proxy interface {
 	DestConn() net.Conn
 }
 
-func newSocks4(src net.Conn, auth auth.Authenticator, log *logrus.Entry, dialFunc common.DialFunc) Proxy {
+func newSocks4(src net.Conn, auth auth.Authenticator, dialFunc common.DialFunc) Proxy {
+	uuid := common.GUID()
+	log := logrus.WithFields(logrus.Fields{
+		"uuid": uuid,
+	})
 	return &socks4.Proxy{
+		UUID: uuid,
 		Src:  src,
 		Auth: auth,
 		Log:  log,
@@ -25,8 +30,13 @@ func newSocks4(src net.Conn, auth auth.Authenticator, log *logrus.Entry, dialFun
 	}
 }
 
-func newSocks5(src net.Conn, auth auth.Authenticator, log *logrus.Entry, dialFunc common.DialFunc, udpAddr string) Proxy {
+func newSocks5(src net.Conn, auth auth.Authenticator, dialFunc common.DialFunc, udpAddr string) Proxy {
+	uuid := common.GUID()
+	log := logrus.WithFields(logrus.Fields{
+		"uuid": uuid,
+	})
 	return &socks5.Proxy{
+		UUID: uuid,
 		Src:  src,
 		Auth: auth,
 		Log:  log,
@@ -35,8 +45,13 @@ func newSocks5(src net.Conn, auth auth.Authenticator, log *logrus.Entry, dialFun
 	}
 }
 
-func newHttp(src net.Conn, auth auth.Authenticator, log *logrus.Entry, dialFunc common.DialFunc) Proxy {
+func newHttp(src net.Conn, auth auth.Authenticator, dialFunc common.DialFunc) Proxy {
+	uuid := common.GUID()
+	log := logrus.WithFields(logrus.Fields{
+		"uuid": uuid,
+	})
 	return &http.Proxy{
+		UUID: uuid,
 		Src:  src,
 		Auth: auth,
 		Log:  log,

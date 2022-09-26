@@ -145,6 +145,105 @@
                 }
             }
         },
+        "/api/connections": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "get connections",
+                "tags": [
+                    "Connections"
+                ],
+                "summary": "get",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "interval time",
+                        "name": "interval",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "close all connections",
+                "tags": [
+                    "Connections"
+                ],
+                "summary": "close all connections",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/connections/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "close connections",
+                "tags": [
+                    "Connections"
+                ],
+                "summary": "close",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "connections id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.JSONResult"
+                        }
+                    }
+                }
+            }
+        },
         "/api/server": {
             "get": {
                 "security": [

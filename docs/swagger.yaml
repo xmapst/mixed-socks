@@ -180,6 +180,67 @@ paths:
       summary: save
       tags:
       - Config
+  /api/connections:
+    get:
+      description: get connections
+      parameters:
+      - description: interval time
+        in: query
+        name: interval
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
+      summary: get
+      tags:
+      - Connections
+    post:
+      description: close all connections
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
+      summary: close all connections
+      tags:
+      - Connections
+  /api/connections/{id}:
+    post:
+      description: close connections
+      parameters:
+      - description: connections id
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
+      summary: close
+      tags:
+      - Connections
   /api/server:
     get:
       description: mixed socks server state

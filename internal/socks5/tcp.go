@@ -7,12 +7,14 @@ import (
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
+	"github/xmapst/mixed-socks/internal/statistic"
 	"io"
 	"net"
 	"strconv"
 )
 
 type Proxy struct {
+	UUID string
 	Log  *logrus.Entry
 	Src  net.Conn
 	Dest net.Conn
@@ -268,8 +270,18 @@ func (p *Proxy) handleConnectCmd(target string) {
 	// connection success
 	_, _ = p.Src.Write([]byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01})
 	p.Log.Infoln("connection established")
-	// enter data exchange
-	common.Forward(p.Src, p.Dest)
+	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
+	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
+	common.Forward(p.Src, p.Dest, &statistic.Metadata{
+		UUID:     p.UUID,
+		NetWork:  statistic.TCP,
+		Type:     statistic.SOCKS5,
+		SrcIP:    srcIP,
+		SrcPort:  srcPort,
+		DestIP:   destIP,
+		DestPort: destPort,
+		Host:     target,
+	})
 	return
 }
 

@@ -1,13 +1,15 @@
 package common
 
 import (
+	"github/xmapst/mixed-socks/internal/statistic"
 	"io"
 	"net"
 )
 
 type DialFunc func(network, addr string) (net.Conn, error)
 
-func Forward(src, dest net.Conn) {
+func Forward(src, dest net.Conn, metadata *statistic.Metadata) {
+	src = statistic.NewTCPTracker(src, metadata)
 	defer func(src, dest net.Conn) {
 		_ = dest.Close()
 		_ = src.Close()
