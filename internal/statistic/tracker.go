@@ -12,11 +12,11 @@ type tracker interface {
 }
 
 type trackerInfo struct {
-	UUID          string        `json:"id"`
-	Metadata      *Metadata     `json:"metadata"`
-	UploadTotal   *atomic.Int64 `json:"upload"`
-	DownloadTotal *atomic.Int64 `json:"download"`
-	Start         time.Time     `json:"start"`
+	UUID          string        `json:""`
+	Metadata      *Metadata     `json:""`
+	UploadTotal   *atomic.Int64 `json:""`
+	DownloadTotal *atomic.Int64 `json:""`
+	Start         time.Time     `json:""`
 }
 
 type TcpTracker struct {

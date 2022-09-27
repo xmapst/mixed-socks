@@ -88,7 +88,7 @@ func (m *manager) handle() {
 }
 
 type Snapshot struct {
-	DownloadTotal int64     `json:"downloadTotal"`
-	UploadTotal   int64     `json:"uploadTotal"`
-	Connections   []tracker `json:"connections"`
+	DownloadTotal int64     `json:""`
+	UploadTotal   int64     `json:""`
+	Connections   []tracker `json:""`
 }
