@@ -37,7 +37,7 @@ func connections(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	intervalStr := c.DefaultQuery("interval", "1000")
+	intervalStr := c.DefaultQuery("interval", "600")
 	interval := 1000
 	if intervalStr != "" {
 		t, err := strconv.Atoi(intervalStr)
