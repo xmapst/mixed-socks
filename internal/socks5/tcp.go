@@ -14,43 +14,44 @@ import (
 )
 
 type Proxy struct {
-	UUID string
-	Log  *logrus.Entry
-	Src  net.Conn
-	Dest net.Conn
-	Auth auth.Authenticator
-	Dial common.DialFunc
+	uuid string
+	log  *logrus.Entry
+	src  net.Conn
+	dest net.Conn
+	auth auth.Authenticator
+	dial common.DialFunc
 	Udp  string
 }
 
 type DialFunc func(network, addr string) (net.Conn, error)
 
 func (p *Proxy) srcAddr() string {
-	if p.Src != nil {
-		return p.Src.RemoteAddr().String()
+	if p.src != nil {
+		return p.src.RemoteAddr().String()
 	}
 	return ""
 }
 
 func (p *Proxy) proxyAddr() string {
-	if p.Dest != nil {
-		return p.Dest.LocalAddr().String()
+	if p.dest != nil {
+		return p.dest.LocalAddr().String()
 	}
 	return ""
 }
 
 func (p *Proxy) destAddr() string {
-	if p.Dest != nil {
-		return p.Dest.RemoteAddr().String()
+	if p.dest != nil {
+		return p.dest.RemoteAddr().String()
 	}
 	return ""
 }
 
-func (p *Proxy) SrcConn() net.Conn {
-	return p.Src
-}
-func (p *Proxy) DestConn() net.Conn {
-	return p.Dest
+func (p *Proxy) init(uuid string, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
+	p.uuid = uuid
+	p.src = conn
+	p.auth = authenticator
+	p.dial = dial
+	p.log = log
 }
 
 /*
@@ -75,40 +76,42 @@ byte |0   |  1   | 2  |   3    | 4 | .. | n-2 | n-1 | n |
      |0x05|status|0x00|addrtype|     addr     |  port   |
 */
 
-func (p *Proxy) Handle(buf []byte, n int) {
-	p.Log = p.Log.WithField("src", p.srcAddr())
-	if err := p.handshake(buf, n); err != nil {
+func (p *Proxy) Handle(uuid string, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
+	p.init(uuid, conn, authenticator, dial, log)
+	p.log = p.log.WithField("src", p.srcAddr())
+	if err := p.handshake(); err != nil {
 		return
 	}
 	p.processRequest()
 	return
 }
 
-func (p *Proxy) handshake(buf []byte, n int) error {
+func (p *Proxy) handshake() error {
+	var buf = make([]byte, 4096)
+	var n int
 	// read auth methods
 	if n < 2 {
-		n1, err := io.ReadAtLeast(p.Src, buf[1:], 1)
+		n1, err := io.ReadAtLeast(p.src, buf, 1)
 		if err != nil {
-			p.Log.Errorln(err)
+			p.log.Errorln(err)
 			return err
 		}
 		n += n1
 	}
-
 	l := int(buf[1])
 	if n != (l + 2) {
 		// read remains data
-		n1, err := io.ReadFull(p.Src, buf[n:l+2+1])
+		n1, err := io.ReadFull(p.src, buf[n:l+2+1])
 		if err != nil {
-			p.Log.Errorln(err)
+			p.log.Errorln(err)
 			return err
 		}
 		n += n1
 	}
 
-	if !p.Auth.Enable() {
+	if !p.auth.Enable() {
 		// no auth required
-		_, _ = p.Src.Write([]byte{0x05, 0x00})
+		_, _ = p.src.Write([]byte{0x05, 0x00})
 		return nil
 	}
 
@@ -125,8 +128,8 @@ func (p *Proxy) handshake(buf []byte, n int) error {
 	}
 
 	if !hasPassAuth {
-		_, _ = p.Src.Write([]byte{0x05, 0xff})
-		p.Log.Errorln("no supported auth method")
+		_, _ = p.src.Write([]byte{0x05, 0xff})
+		p.log.Errorln("no supported auth method")
 		return errors.New("no supported auth method")
 	}
 
@@ -137,15 +140,15 @@ func (p *Proxy) passwordAuth() error {
 	buf := make([]byte, 32)
 
 	// username/password required
-	_, _ = p.Src.Write([]byte{0x05, 0x02})
-	n, err := io.ReadAtLeast(p.Src, buf, 2)
+	_, _ = p.src.Write([]byte{0x05, 0x02})
+	n, err := io.ReadAtLeast(p.src, buf, 2)
 	if err != nil {
-		p.Log.Errorln(err)
+		p.log.Errorln(err)
 		return err
 	}
 	// check auth version
 	if buf[0] != 0x01 {
-		p.Log.Errorln("unsupported auth version")
+		p.log.Errorln("unsupported auth version")
 		return errors.New("unsupported auth version")
 	}
 
@@ -154,15 +157,15 @@ func (p *Proxy) passwordAuth() error {
 	p1 := p0 + usernameLen
 	for n < p1 {
 		var n1 int
-		n1, err = p.Src.Read(buf[n:])
+		n1, err = p.src.Read(buf[n:])
 		if err != nil {
-			p.Log.Errorln(err)
+			p.log.Errorln(err)
 			return err
 		}
 		n += n1
 	}
 	user := string(buf[p0:p1])
-	p.Log = p.Log.WithField("user", user)
+	p.log = p.log.WithField("user", user)
 	passwordLen := int(buf[p1])
 
 	p3 := p1 + 1
@@ -170,21 +173,21 @@ func (p *Proxy) passwordAuth() error {
 
 	for n < p4 {
 		var n1 int
-		n1, err = p.Src.Read(buf[n:])
+		n1, err = p.src.Read(buf[n:])
 		if err != nil {
-			p.Log.Errorln(err)
+			p.log.Errorln(err)
 			return err
 		}
 		n += n1
 	}
 
 	password := buf[p3:p4]
-	if p.Auth.Verify(user, string(password), p.srcAddr()) {
-		_, _ = p.Src.Write([]byte{0x01, 0x00})
+	if p.auth.Verify(user, string(password), p.srcAddr()) {
+		_, _ = p.src.Write([]byte{0x01, 0x00})
 		return nil
 	}
-	_, _ = p.Src.Write([]byte{0x01, 0x01})
-	p.Log.Errorln("access denied")
+	_, _ = p.src.Write([]byte{0x01, 0x01})
+	p.log.Errorln("access denied")
 	return errors.New("access denied")
 }
 
@@ -192,14 +195,14 @@ func (p *Proxy) processRequest() {
 	buf := make([]byte, 258)
 
 	// read header
-	n, err := io.ReadAtLeast(p.Src, buf, 10)
+	n, err := io.ReadAtLeast(p.src, buf, 10)
 	if err != nil {
-		p.Log.Errorln(err)
+		p.log.Errorln(err)
 		return
 	}
 
 	if buf[0] != Version {
-		p.Log.Errorln("error version", buf[0])
+		p.log.Errorln("error version", buf[0])
 		return
 	}
 
@@ -220,9 +223,9 @@ func (p *Proxy) processRequest() {
 
 	if n < msglen {
 		// read remains header
-		_, err = io.ReadFull(p.Src, buf[n:msglen])
+		_, err = io.ReadFull(p.src, buf[n:msglen])
 		if err != nil {
-			p.Log.Errorln(err)
+			p.log.Errorln(err)
 			return
 		}
 	}
@@ -240,7 +243,7 @@ func (p *Proxy) processRequest() {
 
 	// target address
 	target := net.JoinHostPort(host, fmt.Sprintf("%d", port))
-	p.Log = p.Log.WithField("command", cmdMap[buf[1]])
+	p.log = p.log.WithField("command", cmdMap[buf[1]])
 	// command support connect
 	switch buf[1] {
 	case CmdUdp:
@@ -254,26 +257,26 @@ func (p *Proxy) processRequest() {
 
 func (p *Proxy) handleConnectCmd(target string) {
 	var err error
-	p.Log = p.Log.WithField("dest", target)
-	p.Log.Info("establish connection")
+	p.log = p.log.WithField("dest", target)
+	p.log.Info("establish connection")
 	// connect to the target
-	p.Dest, err = p.Dial("tcp", target)
+	p.dest, err = p.dial("tcp", target)
 	if err != nil {
 		// connection failed
-		_, _ = p.Src.Write([]byte{0x05, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01})
-		p.Log.Errorln(err)
+		_, _ = p.src.Write([]byte{0x05, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01})
+		p.log.Errorln(err)
 		return
 	}
 
-	p.Log = p.Log.WithField("proxy", p.proxyAddr())
-	p.Log = p.Log.WithField("dest", p.destAddr())
+	p.log = p.log.WithField("proxy", p.proxyAddr())
+	p.log = p.log.WithField("dest", p.destAddr())
 	// connection success
-	_, _ = p.Src.Write([]byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01})
-	p.Log.Infoln("connection established")
+	_, _ = p.src.Write([]byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01})
+	p.log.Infoln("connection established")
 	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
 	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
-	common.Forward(p.Src, p.Dest, &statistic.Metadata{
-		UUID:     p.UUID,
+	common.Forward(p.src, p.dest, &statistic.Metadata{
+		UUID:     p.uuid,
 		NetWork:  statistic.TCP,
 		Type:     statistic.SOCKS5,
 		SrcIP:    srcIP,
@@ -302,9 +305,9 @@ func (p *Proxy) handleUdpCmd() {
 	binary.BigEndian.PutUint16(portByte, uint16(_port))
 	buf := append([]byte{Version, 0x00, 0x00, 0x01}, hostByte...)
 	buf = append(buf, portByte...)
-	_, err = p.Src.Write(buf)
+	_, err = p.src.Write(buf)
 	if err != nil {
-		p.Log.Errorln("write response error", err)
+		p.log.Errorln("write response error", err)
 		return
 	}
 
@@ -315,12 +318,12 @@ func (p *Proxy) handleUdpCmd() {
 		for {
 			_, err = io.ReadFull(src, make([]byte, 100))
 			if err != nil {
-				p.Log.Errorln(err)
+				p.log.Errorln(err)
 				break
 			}
 		}
 	}
 
-	go forward(p.Src)
+	go forward(p.src)
 	return
 }

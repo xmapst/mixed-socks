@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/dgraph-io/badger/v3"
-	"github.com/dgraph-io/badger/v3/options"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
 )
@@ -23,8 +22,6 @@ const (
 func New(path string) (err error) {
 	var opt = badger.DefaultOptions(path)
 	opt.Logger = logrus.StandardLogger()
-	opt.WithCompression(options.ZSTD)
-	opt.WithSyncWrites(true)
 	opt.WithLoggingLevel(badger.ERROR)
 	db, err = badger.Open(opt)
 	if err != nil {

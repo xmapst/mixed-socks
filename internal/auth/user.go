@@ -2,17 +2,18 @@ package auth
 
 import (
 	"github/xmapst/mixed-socks/internal/service"
+	"net"
 )
 
 type Authenticator interface {
-	Verify(user string, pass string, host string) bool
+	Verify(user string, pass string, addr string) bool
 	Enable() bool
 }
 
 type Auth struct {
 }
 
-func (a *Auth) Verify(u, p, h string) bool {
+func (a *Auth) Verify(u, p, addr string) bool {
 	user := &service.User{
 		Name: u,
 	}
@@ -31,7 +32,11 @@ func (a *Auth) Verify(u, p, h string) bool {
 	if res.CIDR == nil {
 		return true
 	}
-	return verifyCIDR(h, res.CIDR)
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+	return verifyCIDR(host, res.CIDR)
 }
 
 func (a *Auth) Enable() bool {

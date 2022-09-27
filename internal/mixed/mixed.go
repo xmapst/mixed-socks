@@ -12,7 +12,6 @@ import (
 	"github/xmapst/mixed-socks/internal/socks4"
 	"github/xmapst/mixed-socks/internal/socks5"
 	"github/xmapst/mixed-socks/internal/udp"
-	"io"
 	"net"
 	"sync"
 	"time"
@@ -25,6 +24,8 @@ type Listener struct {
 	port   int64
 	closed bool
 	wg     *sync.WaitGroup
+	conf   *service.Conf
+	auth   auth.Authenticator
 }
 
 func (l *Listener) RawAddress() string {
@@ -96,6 +97,8 @@ func New() *Listener {
 		host:   res.Host,
 		port:   res.Port,
 		closed: true,
+		conf:   _conf,
+		auth:   new(auth.Auth),
 	}
 }
 
@@ -160,30 +163,28 @@ func (l *Listener) ListenAndServe() (err error) {
 	return nil
 }
 
-func (l *Listener) handle(src net.Conn) {
+func (l *Listener) handle(conn net.Conn) {
 	defer l.wg.Done()
-	buf := make([]byte, 512)
-	// read version
-	n, err := io.ReadAtLeast(src, buf, 1)
+	bufConn := common.NewBufferedConn(conn)
+	head, err := bufConn.Peek(1)
 	if err != nil {
 		logrus.Errorln(err)
 		return
 	}
-	conf := &service.Conf{
-		Host: "0.0.0.0",
-		Port: 8090,
-	}
-	d := net.Dialer{Timeout: conf.Get().ParseTimeout()}
+
+	d := net.Dialer{Timeout: l.conf.Get().ParseTimeout()}
 	var proxy Proxy
-	var _auth = &auth.Auth{}
-	ver := buf[0]
-	switch ver {
+	switch head[0] {
 	case socks4.Version:
-		proxy = newSocks4(src, _auth, d.Dial)
+		proxy = newSocks4()
 	case socks5.Version:
-		proxy = newSocks5(src, _auth, d.Dial, l.udp.LocalAddr().String())
+		proxy = newSocks5(l.udp.LocalAddr().String())
 	default:
-		proxy = newHttp(src, _auth, d.Dial)
+		proxy = newHttp()
 	}
-	proxy.Handle(buf, n)
+	uuid := common.GUID()
+	log := logrus.WithFields(logrus.Fields{
+		"uuid": uuid,
+	})
+	proxy.Handle(uuid, bufConn, l.auth, d.Dial, log)
 }
