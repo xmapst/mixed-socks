@@ -327,6 +327,6 @@ func (p *Proxy) handleUdpCmd() {
 		}
 	}
 
-	go forward(p.src)
+	forward(p.src)
 	return
 }
