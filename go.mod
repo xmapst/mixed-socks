@@ -10,11 +10,11 @@ require (
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-gonic/gin v1.8.1
+	github.com/gofrs/uuid v4.3.0+incompatible
 	github.com/gorilla/websocket v1.5.0
 	github.com/json-iterator/go v1.1.12
 	github.com/pires/go-proxyproto v0.6.2
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/rs/xid v1.4.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.13.0

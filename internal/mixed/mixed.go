@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"github.com/pires/go-proxyproto"
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
@@ -182,9 +183,9 @@ func (l *Listener) handle(conn net.Conn) {
 	default:
 		proxy = newHttp()
 	}
-	uuid := common.GUID()
+	id, _ := uuid.NewV4()
 	log := logrus.WithFields(logrus.Fields{
-		"uuid": uuid,
+		"uuid": id,
 	})
-	proxy.Handle(uuid, bufConn, l.auth, d.Dial, log)
+	proxy.Handle(id, bufConn, l.auth, d.Dial, log)
 }

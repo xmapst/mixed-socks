@@ -1,6 +1,7 @@
 package statistic
 
 import (
+	"github.com/gofrs/uuid"
 	"go.uber.org/atomic"
 	"net"
 	"time"
@@ -12,7 +13,7 @@ type tracker interface {
 }
 
 type trackerInfo struct {
-	UUID          string        `json:""`
+	UUID          uuid.UUID     `json:""`
 	Metadata      *Metadata     `json:""`
 	UploadTotal   *atomic.Int64 `json:""`
 	DownloadTotal *atomic.Int64 `json:""`
@@ -26,7 +27,7 @@ type TcpTracker struct {
 }
 
 func (tt *TcpTracker) ID() string {
-	return tt.UUID
+	return tt.UUID.String()
 }
 
 func (tt *TcpTracker) Read(b []byte) (int, error) {
@@ -50,7 +51,7 @@ func (tt *TcpTracker) Close() error {
 	return tt.Conn.Close()
 }
 
-func NewTCPTracker(id string, conn net.Conn, metadata *Metadata) *TcpTracker {
+func NewTCPTracker(id uuid.UUID, conn net.Conn, metadata *Metadata) *TcpTracker {
 	t := &TcpTracker{
 		Conn:    conn,
 		manager: Manager,

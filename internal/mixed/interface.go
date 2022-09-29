@@ -1,6 +1,7 @@
 package mixed
 
 import (
+	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
@@ -11,7 +12,7 @@ import (
 )
 
 type Proxy interface {
-	Handle(uuid string, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry)
+	Handle(uuid uuid.UUID, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry)
 }
 
 func newSocks4() Proxy {

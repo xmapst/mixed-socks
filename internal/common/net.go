@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/gofrs/uuid"
 	"github/xmapst/mixed-socks/internal/statistic"
 	"io"
 	"net"
@@ -8,7 +9,7 @@ import (
 
 type DialFunc func(network, addr string) (net.Conn, error)
 
-func Forward(id string, src, dest net.Conn, metadata *statistic.Metadata) {
+func Forward(id uuid.UUID, src, dest net.Conn, metadata *statistic.Metadata) {
 	src = statistic.NewTCPTracker(id, src, metadata)
 	defer func(src, dest net.Conn) {
 		_ = dest.Close()

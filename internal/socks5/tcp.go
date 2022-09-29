@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
@@ -14,7 +15,7 @@ import (
 )
 
 type Proxy struct {
-	uuid string
+	id   uuid.UUID
 	log  *logrus.Entry
 	src  net.Conn
 	dest net.Conn
@@ -46,8 +47,8 @@ func (p *Proxy) destAddr() string {
 	return ""
 }
 
-func (p *Proxy) init(uuid string, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
-	p.uuid = uuid
+func (p *Proxy) init(id uuid.UUID, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
+	p.id = id
 	p.src = conn
 	p.auth = authenticator
 	p.dial = dial
@@ -76,8 +77,8 @@ byte |0   |  1   | 2  |   3    | 4 | .. | n-2 | n-1 | n |
      |0x05|status|0x00|addrtype|     addr     |  port   |
 */
 
-func (p *Proxy) Handle(uuid string, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
-	p.init(uuid, conn, authenticator, dial, log)
+func (p *Proxy) Handle(id uuid.UUID, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
+	p.init(id, conn, authenticator, dial, log)
 	p.log = p.log.WithField("src", p.srcAddr())
 	if err := p.handshake(); err != nil {
 		return
@@ -275,7 +276,7 @@ func (p *Proxy) handleConnectCmd(target string) {
 	p.log.Infoln("connection established")
 	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
 	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
-	common.Forward(p.uuid, p.src, p.dest, &statistic.Metadata{
+	common.Forward(p.id, p.src, p.dest, &statistic.Metadata{
 		NetWork:  statistic.TCP,
 		Type:     statistic.SOCKS5,
 		SrcIP:    srcIP,

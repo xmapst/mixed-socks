@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
 	"github/xmapst/mixed-socks/internal/auth"
 	"github/xmapst/mixed-socks/internal/common"
@@ -16,7 +17,7 @@ import (
 )
 
 type Proxy struct {
-	uuid string
+	id   uuid.UUID
 	log  *logrus.Entry
 	src  net.Conn
 	dest net.Conn
@@ -45,16 +46,16 @@ func (p *Proxy) destAddr() string {
 	return ""
 }
 
-func (p *Proxy) init(uuid string, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
-	p.uuid = uuid
+func (p *Proxy) init(id uuid.UUID, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
+	p.id = id
 	p.src = conn
 	p.auth = authenticator
 	p.dial = dial
 	p.log = log
 }
 
-func (p *Proxy) Handle(uuid string, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
-	p.init(uuid, conn, authenticator, dial, log)
+func (p *Proxy) Handle(id uuid.UUID, conn net.Conn, authenticator auth.Authenticator, dial common.DialFunc, log *logrus.Entry) {
+	p.init(id, conn, authenticator, dial, log)
 	p.log = p.log.WithField("src", p.srcAddr())
 	lines, err := p.readString("\r\n")
 	if err != nil {
@@ -205,7 +206,7 @@ func (p *Proxy) handleHTTPConnectMethod(addr string, port uint16) {
 	p.log.Infoln("connection established")
 	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
 	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
-	common.Forward(p.uuid, p.src, p.dest, &statistic.Metadata{
+	common.Forward(p.id, p.src, p.dest, &statistic.Metadata{
 		NetWork:  statistic.TCP,
 		Type:     statistic.HTTPCONNECT,
 		SrcIP:    srcIP,
@@ -239,7 +240,7 @@ func (p *Proxy) handleHTTPProxy(addr string, port uint16, line string) {
 	p.log.Infoln("connection established")
 	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
 	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
-	common.Forward(p.uuid, p.src, p.dest, &statistic.Metadata{
+	common.Forward(p.id, p.src, p.dest, &statistic.Metadata{
 		NetWork:  statistic.TCP,
 		Type:     statistic.HTTP,
 		SrcIP:    srcIP,
