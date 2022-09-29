@@ -20,15 +20,27 @@ func Handler() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 	engine.Use(cors.Default(), gin.Recovery(), gzip.Gzip(gzip.DefaultCompression), logger())
+	engine.Use(func(c *gin.Context) {
+		c.Header("Server", "Mixed-Socks")
+		c.Header("X-Server", "Gin")
+		c.Header("X-Powered-By", "XMapst")
+		c.Header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate, value")
+		c.Header("Expires", "Thu, 01 Jan 1970 00:00:00 GMT")
+		c.Header("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
+		c.Header("Pragma", "no-cache")
+		c.Next()
+	})
 	engine.GET("/healthz", func(c *gin.Context) {
 		c.SecureJSON(http.StatusOK, "running")
 	})
 	engine.GET("/version", version)
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	pprof.Register(engine)
 	api := engine.Group("api")
 	if conf.App.Auth != nil {
 		api.Use(gin.BasicAuth(conf.App.Auth))
 	}
+	// api router path
 	{
 		connection := api.Group("connections")
 		{
@@ -67,12 +79,13 @@ func Handler() *gin.Engine {
 			user.POST(":username", delUser)
 		}
 	}
+	// start socks server
 	ml = mixed.New()
 	err := ml.ListenAndServe()
 	if err != nil {
 		logrus.Fatalln(err)
 	}
-	pprof.Register(engine)
+
 	return engine
 }
 
