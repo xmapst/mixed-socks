@@ -96,12 +96,6 @@ func (c *Config) reload() error {
 		level = logrus.InfoLevel
 	}
 	logrus.SetLevel(level)
-	if LogOutput != nil {
-		err = LogOutput.Rotate()
-		if err != nil {
-			logrus.Warningln(err)
-		}
-	}
 	if c.Log.Filename != "" {
 		LogOutput = &lumberjack.Logger{
 			Filename:   c.Log.Filename,
