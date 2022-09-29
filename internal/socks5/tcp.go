@@ -275,8 +275,7 @@ func (p *Proxy) handleConnectCmd(target string) {
 	p.log.Infoln("connection established")
 	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
 	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
-	common.Forward(p.src, p.dest, &statistic.Metadata{
-		UUID:     p.uuid,
+	common.Forward(p.uuid, p.src, p.dest, &statistic.Metadata{
 		NetWork:  statistic.TCP,
 		Type:     statistic.SOCKS5,
 		SrcIP:    srcIP,
@@ -289,7 +288,7 @@ func (p *Proxy) handleConnectCmd(target string) {
 }
 
 func (p *Proxy) handleUdpCmd() {
-	_, port, err := net.SplitHostPort(p.Udp)
+	host, port, err := net.SplitHostPort(p.Udp)
 	if err != nil {
 		logrus.Errorln(err)
 		return
@@ -299,7 +298,11 @@ func (p *Proxy) handleUdpCmd() {
 		logrus.Errorln(err)
 		return
 	}
-	udpAddr, _ := net.ResolveIPAddr("ip", p.Udp)
+	udpAddr, err := net.ResolveIPAddr("ip", host)
+	if err != nil {
+		logrus.Errorln(err)
+		return
+	}
 	hostByte := udpAddr.IP.To4()
 	portByte := make([]byte, 2)
 	binary.BigEndian.PutUint16(portByte, uint16(_port))

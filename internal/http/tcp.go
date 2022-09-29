@@ -205,8 +205,7 @@ func (p *Proxy) handleHTTPConnectMethod(addr string, port uint16) {
 	p.log.Infoln("connection established")
 	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
 	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
-	common.Forward(p.src, p.dest, &statistic.Metadata{
-		UUID:     p.uuid,
+	common.Forward(p.uuid, p.src, p.dest, &statistic.Metadata{
 		NetWork:  statistic.TCP,
 		Type:     statistic.HTTPCONNECT,
 		SrcIP:    srcIP,
@@ -240,8 +239,7 @@ func (p *Proxy) handleHTTPProxy(addr string, port uint16, line string) {
 	p.log.Infoln("connection established")
 	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
 	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
-	common.Forward(p.src, p.dest, &statistic.Metadata{
-		UUID:     p.uuid,
+	common.Forward(p.uuid, p.src, p.dest, &statistic.Metadata{
 		NetWork:  statistic.TCP,
 		Type:     statistic.HTTP,
 		SrcIP:    srcIP,

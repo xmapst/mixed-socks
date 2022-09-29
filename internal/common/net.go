@@ -8,8 +8,8 @@ import (
 
 type DialFunc func(network, addr string) (net.Conn, error)
 
-func Forward(src, dest net.Conn, metadata *statistic.Metadata) {
-	src = statistic.NewTCPTracker(src, metadata)
+func Forward(id string, src, dest net.Conn, metadata *statistic.Metadata) {
+	src = statistic.NewTCPTracker(id, src, metadata)
 	defer func(src, dest net.Conn) {
 		_ = dest.Close()
 		_ = src.Close()

@@ -50,12 +50,12 @@ func (tt *TcpTracker) Close() error {
 	return tt.Conn.Close()
 }
 
-func NewTCPTracker(conn net.Conn, metadata *Metadata) *TcpTracker {
+func NewTCPTracker(id string, conn net.Conn, metadata *Metadata) *TcpTracker {
 	t := &TcpTracker{
 		Conn:    conn,
 		manager: Manager,
 		trackerInfo: &trackerInfo{
-			UUID:          metadata.UUID,
+			UUID:          id,
 			Start:         time.Now(),
 			Metadata:      metadata,
 			UploadTotal:   atomic.NewInt64(0),

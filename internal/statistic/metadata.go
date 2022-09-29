@@ -51,7 +51,6 @@ func (t Type) MarshalJSON() ([]byte, error) {
 
 // Metadata is used to store connection address
 type Metadata struct {
-	UUID     string  `json:""`
 	NetWork  NetWork `json:""`
 	Type     Type    `json:""`
 	SrcIP    string  `json:""`

@@ -5,7 +5,7 @@ DataDir: data
 #  admin: 123456
 Log:
   Level: info
-  Filename: logs/mixed-socks.log
+#  Filename: logs/mixed-socks.log
   MaxBackups: 7
   MaxSize: 50   # megabytes
   MaxAge: 7     # days

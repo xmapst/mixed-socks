@@ -162,8 +162,7 @@ func (p *Proxy) processRequest(target string) {
 	p.log.Infoln("connection established")
 	srcIP, srcPort, _ := net.SplitHostPort(p.srcAddr())
 	destIP, destPort, _ := net.SplitHostPort(p.destAddr())
-	common.Forward(p.src, p.dest, &statistic.Metadata{
-		UUID:     p.uuid,
+	common.Forward(p.uuid, p.src, p.dest, &statistic.Metadata{
 		NetWork:  statistic.TCP,
 		Type:     statistic.SOCKS4,
 		SrcIP:    srcIP,
