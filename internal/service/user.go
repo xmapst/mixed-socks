@@ -5,7 +5,7 @@ import (
 )
 
 type Auth struct {
-	Enabled bool `json:"enabled" form:"name" description:"启用" example:"false"`
+	Enabled bool `json:"" form:"Name" description:"启用" example:"false"`
 }
 
 func (a *Auth) Save() (err error) {
@@ -35,11 +35,11 @@ func (a *Auth) Get() bool {
 }
 
 type User struct {
-	Name     string   `json:"name" form:"name" binding:"required" description:"用户名" example:"name"`
-	Pass     string   `json:"pass" form:"pass" description:"密码(sock4下不生效)" example:"123456"`
-	CIDR     []string `json:"cidr" form:"cidr" description:"白名单" example:"0.0.0.0/0"`
-	Remark   string   `json:"remark" form:"remark" description:"备注" example:"小明"`
-	Disabled bool     `json:"disabled" form:"disabled" description:"禁用" example:"false"`
+	Name     string   `json:"" form:"Name" binding:"required" description:"用户名" example:"name"`
+	Pass     string   `json:"" form:"Pass" description:"密码(sock4下不生效)" example:"123456"`
+	CIDR     []string `json:"" form:"CIDR" description:"白名单" example:"0.0.0.0/0"`
+	Remark   string   `json:"" form:"Remark" description:"备注" example:"小明"`
+	Disabled bool     `json:"" form:"Disabled" description:"禁用" example:"false"`
 }
 
 func (u *User) Save() (err error) {

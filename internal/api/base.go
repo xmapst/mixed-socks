@@ -39,9 +39,9 @@ type Gin struct {
 }
 
 type JSONResult struct {
-	Code    int         `json:"code" description:"返回码" example:"0000"`
-	Message string      `json:"message,omitempty" description:"消息" example:"消息"`
-	Data    interface{} `json:"data,omitempty" description:"数据"`
+	Code    int         `json:"" description:"返回码" example:"0000"`
+	Message string      `json:",omitempty" description:"消息" example:"消息"`
+	Data    interface{} `json:",omitempty" description:"数据"`
 }
 
 func newRes(data interface{}, err error, code int) *JSONResult {

@@ -42,6 +42,7 @@ func Handler() *gin.Engine {
 	}
 	// api router path
 	{
+		api.GET("traffic", traffic)
 		connection := api.Group("connections")
 		{
 			connection.GET("", connections)

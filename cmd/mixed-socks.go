@@ -51,7 +51,7 @@ var cmd = &cobra.Command{
 			IdleTimeout:  time.Second * 180,
 			Handler:      handler,
 		}
-		logrus.Infof("start http server, listen %s", server.Addr)
+		logrus.Infof("HTTP Server Listening At:%s", server.Addr)
 		err = server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			logrus.Error(err)

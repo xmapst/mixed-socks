@@ -279,6 +279,23 @@ paths:
       summary: Operate
       tags:
       - Server
+  /api/traffic:
+    get:
+      description: get traffic
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.JSONResult'
+      security:
+      - BasicAuth: []
+      summary: get
+      tags:
+      - Traffic
   /api/user:
     get:
       description: List all user

@@ -6,10 +6,10 @@ import (
 )
 
 type Conf struct {
-	Host    string   `json:"host" description:"监听地址" example:"0.0.0.0"`
-	Port    int64    `json:"port" description:"监听端口" example:"8090"`
-	CIDR    []string `json:"cidr" description:"白名单" example:"0.0.0.0/0"`
-	Timeout string   `json:"timeout" description:"超时时间" example:"30s"`
+	Host    string   `json:"" form:"Host" description:"监听地址" example:"0.0.0.0"`
+	Port    int64    `json:"" form:"Port" description:"监听端口" example:"8090"`
+	CIDR    []string `json:"" form:"CIDR" description:"白名单" example:"0.0.0.0/0"`
+	Timeout string   `json:"" form:"Timeout" description:"超时时间" example:"30s"`
 }
 
 func (c *Conf) Save() error {
