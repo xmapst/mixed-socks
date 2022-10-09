@@ -129,7 +129,7 @@ func (l *Listener) ListenAndServe() (err error) {
 	l.closed = false
 	// udp
 	go func() {
-		logrus.Infoln("listen udp", l.udp.LocalAddr().String())
+		logrus.Infoln("UDP Server Listening At:", l.udp.LocalAddr().String())
 		udp.Listen(l.udp)
 	}()
 	// tcp
@@ -138,7 +138,7 @@ func (l *Listener) ListenAndServe() (err error) {
 		fmt.Sprintf("socks4://%s", l.Address()),
 		fmt.Sprintf("socks5://%s", l.Address()),
 	}
-	logrus.Infoln("listen tcp", listenAddr)
+	logrus.Infoln("TCP Server Listening At:", listenAddr)
 	go func() {
 		ln := &proxyproto.Listener{Listener: l.tcp}
 		for {
