@@ -63,7 +63,7 @@ var cmd = &cobra.Command{
 func init() {
 	logrus.SetReportCaller(true)
 	logrus.SetFormatter(&logrus.JSONFormatter{
-		TimestampFormat: "2006-01-02 15:03:04",
+		TimestampFormat: time.RFC3339,
 		CallerPrettyfier: func(frame *runtime.Frame) (function string, file string) {
 			file = fmt.Sprintf("%s:%d", path.Base(frame.File), frame.Line)
 			function = path.Base(frame.Function)
