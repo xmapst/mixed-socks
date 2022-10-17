@@ -285,6 +285,7 @@ func (p *Proxy) handleConnectCmd(target string) {
 		DestPort: destPort,
 		Host:     target,
 	})
+    p.log.Info("connection closed")
 	return
 }
 

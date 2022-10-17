@@ -172,6 +172,7 @@ func (p *Proxy) processRequest(target string) {
 		DestPort: destPort,
 		Host:     target,
 	})
+    p.log.Info("connection closed")
 }
 
 func (p *Proxy) readUntilNull(src []byte) string {

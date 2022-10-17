@@ -215,6 +215,7 @@ func (p *Proxy) handleHTTPConnectMethod(addr string, port uint16) {
 		DestPort: destPort,
 		Host:     target,
 	})
+    p.log.Info("connection closed")
 	return
 }
 
@@ -249,6 +250,7 @@ func (p *Proxy) handleHTTPProxy(addr string, port uint16, line string) {
 		DestPort: destPort,
 		Host:     target,
 	})
+    p.log.Info("connection closed")
 	return
 }
 
