@@ -20,7 +20,7 @@ require (
 	github.com/spf13/viper v1.14.0
 	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a
 	github.com/swaggo/gin-swagger v1.5.3
-	github.com/swaggo/swag v1.8.8
+	github.com/swaggo/swag v1.8.9
 	go.uber.org/atomic v1.10.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
