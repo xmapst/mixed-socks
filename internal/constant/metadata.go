@@ -38,7 +38,7 @@ func (t Type) String() string {
 	case HTTP:
 		return "HTTP"
 	case HTTPCONNECT:
-		return "HTTP Connect"
+		return "HTTPS"
 	case SOCKS4:
 		return "Socks4"
 	case SOCKS5:

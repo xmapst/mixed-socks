@@ -18,13 +18,14 @@ import (
 )
 
 var (
-	tcpQueue = make(chan constant.ConnContext, 1024)
-	udpQueue = make(chan *inbound.PacketAdapter, 1024)
+	tcpQueue = make(chan constant.ConnContext, 65535)
+	udpQueue = make(chan *inbound.PacketAdapter, 65535)
 	natTable = nat.New()
 	proxies  = adapter.NewProxy(outbound.NewDirect())
 
 	// default timeout for UDP session
 	udpTimeout = 60 * time.Second
+	workers    = 4
 )
 
 func init() {
@@ -49,18 +50,22 @@ func processUDP() {
 	}
 }
 
-func process() {
-	numUDPWorkers := 4
-	if num := runtime.GOMAXPROCS(0); num > numUDPWorkers {
-		numUDPWorkers = num
-	}
-	for i := 0; i < numUDPWorkers; i++ {
-		go processUDP()
-	}
-
+// processTCP starts a loop to handle udp packet
+func processTCP() {
 	queue := tcpQueue
 	for conn := range queue {
 		go handleTCPConn(conn)
+	}
+}
+
+func process() {
+	if num := runtime.GOMAXPROCS(0); num > workers {
+		workers = num
+	}
+	workers *= workers
+	for i := 0; i < workers; i++ {
+		go processUDP()
+		go processTCP()
 	}
 }
 

@@ -243,7 +243,7 @@ type Config struct {
 func NewResolver(config Config) *Resolver {
 	r := &Resolver{
 		main:     transform(config.NameServers, nil),
-		lruCache: cache.New(cache.WithSize(4096), cache.WithStale(true)),
+		lruCache: cache.New(cache.WithSize(65535), cache.WithStale(true)),
 		hosts:    config.Hosts,
 	}
 	return r

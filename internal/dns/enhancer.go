@@ -29,6 +29,6 @@ func (h *ResolverEnhancer) PatchFrom(o *ResolverEnhancer) {
 
 func NewEnhancer() *ResolverEnhancer {
 	return &ResolverEnhancer{
-		mapping: cache.New(cache.WithSize(4096), cache.WithStale(true)),
+		mapping: cache.New(cache.WithSize(65535), cache.WithStale(true)),
 	}
 }
