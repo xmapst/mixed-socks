@@ -50,7 +50,7 @@ func processUDP() {
 	}
 }
 
-// processTCP starts a loop to handle udp packet
+// processTCP starts a loop to handle tcp packet
 func processTCP() {
 	queue := tcpQueue
 	for conn := range queue {
