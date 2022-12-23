@@ -14,6 +14,7 @@ import (
 	authStore "github.com/xmapst/mixed-socks/internal/listener/auth"
 	"github.com/xmapst/mixed-socks/internal/tunnel"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -48,8 +49,17 @@ func applyConfig(changeCh chan bool) {
 	}
 }
 
+var _fileName string
+
 func updateLogger(cfg *config.Log) {
 	if cfg == nil {
+		logrus.SetOutput(io.Discard)
+		if cfg.Output != nil {
+			err := cfg.Output.Close()
+			if err != nil {
+				logrus.Warnln(err)
+			}
+		}
 		return
 	}
 	level, err := logrus.ParseLevel(cfg.Level)
@@ -57,7 +67,10 @@ func updateLogger(cfg *config.Log) {
 		level = logrus.InfoLevel
 	}
 	logrus.SetLevel(level)
-	if cfg.Filename != "" {
+	if cfg.Filename == _fileName {
+		return
+	}
+	if cfg.Filename != "" && cfg.Filename != "stdout" {
 		err = os.MkdirAll(filepath.Dir(cfg.Filename), 0777)
 		if err != nil {
 			logrus.Errorln(err)
@@ -76,6 +89,7 @@ func updateLogger(cfg *config.Log) {
 		cfg.Output = nil
 		logrus.SetOutput(os.Stdout)
 	}
+	_fileName = cfg.Filename
 }
 
 func updateDNS(c *config.DNS) {

@@ -21,7 +21,7 @@ var (
 
 var interfaces = singledo.NewSingle(time.Second * 20)
 
-func ResolveInterface(name string) (*Interface, error) {
+func Interfaces() (map[string]*Interface, error) {
 	value, err, _ := interfaces.Do(func() (any, error) {
 		ifaces, err := net.Interfaces()
 		if err != nil {
@@ -59,9 +59,16 @@ func ResolveInterface(name string) (*Interface, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	ifaces := value.(map[string]*Interface)
-	iface, ok := ifaces[name]
+	return ifaces, nil
+}
+
+func ResolveInterface(name string) (*Interface, error) {
+	value, err := Interfaces()
+	if err != nil {
+		return nil, err
+	}
+	iface, ok := value[name]
 	if !ok {
 		return nil, ErrIfaceNotFound
 	}

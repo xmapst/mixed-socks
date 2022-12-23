@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/xmapst/mixed-socks/internal/component/auth"
+	"github.com/xmapst/mixed-socks/internal/component/iface"
 	"github.com/xmapst/mixed-socks/internal/component/trie"
 	"github.com/xmapst/mixed-socks/internal/constant"
 	"github.com/xmapst/mixed-socks/internal/dns"
@@ -124,9 +125,9 @@ func Load(changeCh chan bool) error {
 	}
 	v.WatchConfig()
 	v.OnConfigChange(func(e fsnotify.Event) {
-        if !e.Has(fsnotify.Write) {
-            return
-        }
+		if !e.Has(fsnotify.Write) {
+			return
+		}
 		logrus.Infoln(e.Name, "config file modified")
 		conf, err := viperLoadConf()
 		if err != nil {
@@ -295,9 +296,12 @@ func parseAuthentication(rawRecords map[string]string) []auth.AuthUser {
 
 func parseWhitelist(IPCIDR []string) []net.IP {
 	var ips []net.IP
+	if len(IPCIDR) == 0 {
+		return nil
+	}
 	for _, ipMask := range IPCIDR {
-		if ipMask == "0.0.0.0" || ipMask == "*" || ipMask == "all" {
-			return ips
+		if ipMask == "0.0.0.0" || ipMask == "::" || ipMask == "*" || ipMask == "all" {
+			return nil
 		}
 		if ip := net.ParseIP(ipMask); ip != nil {
 			ips = append(ips, ip)
@@ -305,6 +309,16 @@ func parseWhitelist(IPCIDR []string) []net.IP {
 		}
 		if ip, _, _ := net.ParseCIDR(ipMask); ip != nil {
 			ips = append(ips, ip)
+		}
+	}
+	// access local ip address
+	ifaces, err := iface.Interfaces()
+	if err != nil {
+		logrus.Fatalln(err)
+	}
+	for _, iface := range ifaces {
+		for _, ipNet := range iface.Addrs {
+			ips = append(ips, ipNet.IP)
 		}
 	}
 	return ips
