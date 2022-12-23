@@ -186,7 +186,7 @@ func handleTCPConn(connCtx constant.ConnContext) {
 	defer cancel()
 	remoteConn, err := proxies.DialContext(ctx, metadata.Pure())
 	if err != nil {
-		logrus.Warnf("[TCP] %s --> %s error: %s", metadata.SourceAddress(), metadata.RemoteAddress(), err.Error())
+		logrus.Warnf("[%s] %s --> %s error: %s", metadata.Type.String(), metadata.SourceAddress(), metadata.RemoteAddress(), err.Error())
 		return
 	}
 	remoteConn = statistic.NewTCPTracker(remoteConn, statistic.DefaultManager, metadata)
@@ -194,6 +194,6 @@ func handleTCPConn(connCtx constant.ConnContext) {
 		_ = remoteConn.Close()
 	}(remoteConn)
 
-	logrus.Infof("[TCP] %s --> %s", metadata.SourceAddress(), metadata.RemoteAddress())
+	logrus.Infof("[%s] %s --> %s", metadata.Type.String(), metadata.SourceAddress(), metadata.RemoteAddress())
 	handleSocket(connCtx, remoteConn)
 }

@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/sirupsen/logrus"
-    "github.com/xmapst/mixed-socks"
-    "github.com/xmapst/mixed-socks/internal/config"
+	"github.com/xmapst/mixed-socks"
+	"github.com/xmapst/mixed-socks/internal/config"
 	"github.com/xmapst/mixed-socks/internal/constant"
 	"github.com/xmapst/mixed-socks/internal/engine"
 	"go.uber.org/automaxprocs/maxprocs"
@@ -73,27 +73,27 @@ func main() {
 }
 
 type ConsoleFormatter struct {
-    logrus.TextFormatter
+	logrus.TextFormatter
 }
 
 func (c *ConsoleFormatter) TrimFunctionSuffix(s string) string {
-    if strings.Contains(s, ".func") {
-        index := strings.Index(s, ".func")
-        s = s[:index]
-    }
-    return s
+	if strings.Contains(s, ".func") {
+		index := strings.Index(s, ".func")
+		s = s[:index]
+	}
+	return s
 }
 
 func (c *ConsoleFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-    file := path.Base(entry.Caller.File)
-    function := c.TrimFunctionSuffix(path.Base(entry.Caller.Function))
-    logStr := fmt.Sprintf("%s %s %s:%d %s %v\n",
-        entry.Time.Format("2006/01/02 15:04:05"),
-        strings.ToUpper(entry.Level.String()),
-        file,
-        entry.Caller.Line,
-        function,
-        entry.Message,
-    )
-    return []byte(logStr), nil
+	file := path.Base(entry.Caller.File)
+	function := c.TrimFunctionSuffix(path.Base(entry.Caller.Function))
+	logStr := fmt.Sprintf("%s %s %s:%d %s %v\n",
+		entry.Time.Format("2006/01/02 15:04:05"),
+		strings.ToUpper(entry.Level.String()),
+		file,
+		entry.Caller.Line,
+		function,
+		entry.Message,
+	)
+	return []byte(logStr), nil
 }
