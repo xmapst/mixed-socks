@@ -1,12 +1,40 @@
-Host: 0.0.0.0
-Port: 8080
-DataDir: data
-Auth:
-  admin: 123456
+#support socks4, socks4a, socks5, socks5h, http proxy all in one
+Inbound:
+  Listen: 0.0.0.0
+  Port: 8090
+
+Controller:
+  Enable: true
+  Listen: 0.0.0.0
+  Port: 8080
+  Secret: 123456
+
 Log:
   Level: info
-#  Filename: logs/mixed-socks.log
   MaxBackups: 7
-  MaxSize: 50   # megabytes
-  MaxAge: 7     # days
-  Compress: true # compress log
+  MaxSize: 50
+  MaxAge: 28
+  Compress: true
+  Filename: /var/log/mixed-socks/mixed-socks.log
+
+Auth:
+  "user1": pass1
+
+WhiteList:
+  - 10.0.0.0/8
+  - 172.16.0.0/16
+  - 192.168.0.0/24
+
+Hosts:
+  '*.dev': 127.0.0.1
+  'alpha.dev': '::1'
+
+DNS:
+  Enable: true
+  Listen: 0.0.0.0
+  Port: 53
+  Nameservers:
+    - 114.114.114.114
+    - 8.8.8.8
+    - tls://dns.rubyfish.cn:853
+    - https://1.1.1.1/dns-query
