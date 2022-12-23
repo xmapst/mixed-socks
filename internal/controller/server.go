@@ -8,9 +8,11 @@ import (
 	"github.com/go-chi/render"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
+	"github.com/xmapst/mixed-socks"
 	"github.com/xmapst/mixed-socks/internal/tunnel/statistic"
 	"net"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -51,9 +53,9 @@ func Start(addr string, secret string) {
 	r.Group(func(r chi.Router) {
 		r.Use(authentication)
 
-		r.Get("/", hello)
-		r.Get("/traffic", traffic)
-		r.Mount("/connections", connectionRouter())
+		r.Get("/api", hello)
+		r.Get("/api/traffic", traffic)
+		r.Mount("/api/connections", connectionRouter())
 	})
 
 	l, err := net.Listen("tcp", addr)
@@ -103,7 +105,18 @@ func authentication(next http.Handler) http.Handler {
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	render.JSON(w, r, render.M{"hello": "mixed-socks"})
+	render.JSON(w, r, render.M{
+		"Name":      "MixedSocks",
+		"Version":   info.Version,
+		"BuildTime": info.BuildTime,
+		"GOOS":      runtime.GOOS,
+		"GOARCH":    runtime.GOARCH,
+		"Git": map[string]string{
+			"Url":    info.GitUrl,
+			"Branch": info.GitBranch,
+			"Commit": info.GitCommit,
+		},
+	})
 }
 
 func traffic(w http.ResponseWriter, r *http.Request) {

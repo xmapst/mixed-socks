@@ -4,7 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/xmapst/mixed-socks/internal/config"
+    "github.com/xmapst/mixed-socks"
+    "github.com/xmapst/mixed-socks/internal/config"
 	"github.com/xmapst/mixed-socks/internal/constant"
 	"github.com/xmapst/mixed-socks/internal/engine"
 	"go.uber.org/automaxprocs/maxprocs"
@@ -19,10 +20,12 @@ import (
 var (
 	flagset    map[string]bool
 	configFile string
+	version    bool
 )
 
 func init() {
 	flag.StringVar(&configFile, "c", "", "specify configuration file")
+	flag.BoolVar(&version, "v", false, "show current version")
 	flag.Parse()
 
 	flagset = map[string]bool{}
@@ -40,6 +43,11 @@ func main() {
 		logrus.Fatalln(err.Error())
 	}
 
+	if version {
+		fmt.Println(info.VersionInfo())
+		return
+	}
+
 	if configFile != "" {
 		if !filepath.IsAbs(configFile) {
 			currentDir, _ := os.Getwd()
@@ -50,7 +58,7 @@ func main() {
 		configFile = filepath.Join(constant.Path.HomeDir(), constant.Path.Config())
 		constant.SetConfig(configFile)
 	}
-
+	info.PrintHeadInfo()
 	if err := config.Init(constant.Path.HomeDir()); err != nil {
 		logrus.Fatalf("Initial configuration directory error: %s", err.Error())
 	}
@@ -63,7 +71,6 @@ func main() {
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
 }
-
 
 type ConsoleFormatter struct {
     logrus.TextFormatter

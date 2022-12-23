@@ -8,6 +8,7 @@ support socks4, socks4a, socks5, socks5h, http proxy all in one
 Usage of ./mixed-socks:
   -c string
         specify configuration file
+  -v    show current version
 ```
 
 ## Build
