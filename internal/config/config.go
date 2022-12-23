@@ -124,6 +124,9 @@ func Load(changeCh chan bool) error {
 	}
 	v.WatchConfig()
 	v.OnConfigChange(func(e fsnotify.Event) {
+        if !e.Has(fsnotify.Write) {
+            return
+        }
 		logrus.Infoln(e.Name, "config file modified")
 		conf, err := viperLoadConf()
 		if err != nil {
