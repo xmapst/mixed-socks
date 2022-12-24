@@ -41,7 +41,7 @@ func Run() error {
 // applyConfig dispatch configure to all parts
 func applyConfig(changeCh chan bool) {
 	for range changeCh {
-		updateGeneral(config.App)
+		updateOutbound(config.App.Outbound)
 		updateLogger(config.App.Log)
 		updateWhitelist(config.App.Whitelist)
 		updateUsers(config.App.Users)
@@ -125,17 +125,17 @@ func updateHosts(tree *trie.DomainTrie) {
 	resolver.DefaultHosts = tree
 }
 
-func updateGeneral(cfg *config.Config) {
-	if cfg.Inbound.Interface != "" {
-		iface, err := net.InterfaceByName(cfg.Inbound.Interface)
+func updateOutbound(cfg *config.Outbound) {
+	if cfg.Interface != "" {
+		iface, err := net.InterfaceByName(cfg.Interface)
 		if err == nil {
 			dialer.WithInterface(iface.Name)
-			logrus.Infof("dialer bind to interface: %s", cfg.Inbound.Interface)
+			logrus.Infof("dialer bind to interface: %s", cfg.Interface)
 		}
 	}
-	if cfg.Inbound.RoutingMark != 0 {
-		dialer.WithRoutingMark(cfg.Inbound.RoutingMark)
-		logrus.Infof("dialer set fwmark: %#x", cfg.Inbound.RoutingMark)
+	if cfg.RoutingMark != 0 {
+		dialer.WithRoutingMark(cfg.RoutingMark)
+		logrus.Infof("dialer set fwmark: %#x", cfg.RoutingMark)
 	}
 }
 

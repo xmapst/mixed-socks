@@ -24,6 +24,7 @@ var (
 
 type Config struct {
 	Inbound    *Inbound
+	Outbound   *Outbound
 	Controller *Controller
 	DNS        *DNS
 	Hosts      *trie.DomainTrie
@@ -34,14 +35,18 @@ type Config struct {
 
 // Inbound config
 type Inbound struct {
-	Listen      string `yaml:",default=0.0.0.0"`
-	Port        int    `yaml:",default=8090"`
+	Listen string `yaml:",default=0.0.0.0"`
+	Port   int    `yaml:",default=8090"`
+}
+
+type Outbound struct {
 	Interface   string `yaml:""`
 	RoutingMark int    `yaml:""`
 }
 
 type RawConfig struct {
 	Inbound    *Inbound          `yaml:""`
+	Outbound   *Outbound         `yaml:""`
 	Controller *Controller       `yaml:""`
 	Auth       map[string]string `yaml:""`
 	Hosts      map[string]string `yaml:""`
@@ -131,7 +136,7 @@ func Load(changeCh chan bool) error {
 			return
 		}
 		logrus.Infoln(e.Name, "config file modified")
-		conf, err := viperLoadConf()
+		conf, err = viperLoadConf()
 		if err != nil {
 			logrus.Errorln(err)
 			return
@@ -161,6 +166,7 @@ func Load(changeCh chan bool) error {
 func (c *RawConfig) Parge() error {
 	App = &Config{
 		Inbound:    c.Inbound,
+		Outbound:   c.Outbound,
 		Log:        c.Log,
 		Controller: c.Controller,
 	}

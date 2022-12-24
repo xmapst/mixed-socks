@@ -26,11 +26,17 @@ make
 Inbound:
   Listen: 0.0.0.0
   Port: 8090
-  # Outbound interface name
+
+# Outbound settings
+# This section is optional.
+Outbound:
+  # interface name
   Interface: eth0
   # fwmark on Linux only
   RoutingMark: 6666
 
+# Controller settings
+# This section is optional.
 # RESTful web API listening address
 Controller:
   Enable: true
@@ -48,16 +54,22 @@ Log:
   Compress: true
   Filename: /var/log/mixed-socks/mixed-socks.log
 
+# Auth settings
+# This section is optional.
 # authentication of local HTTP(S) and SOCKS4(A)/SOCKS5 server
 Auth:
   "user1": pass1
 
+# WhiteList settings
+# This section is optional.
 # whiteList of local HTTP(S) and SOCKS4(A)/SOCKS5 server
 WhiteList:
   - 10.0.0.0/8
   - 172.16.0.0/16
   - 192.168.0.0/24
 
+# Hosts settings
+# This section is optional.
 # Static hosts for DNS server and connection establishment (like /etc/hosts)
 #
 # Wildcard hostnames are supported (e.g. *.dev, *.foo.*.example.com)
