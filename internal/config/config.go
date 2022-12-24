@@ -141,14 +141,14 @@ func Load(changeCh chan bool) error {
 			logrus.Errorln(err)
 			return
 		}
-		err = conf.Parge()
+		err = conf.Parse()
 		if err != nil {
 			logrus.Errorln(err)
 			return
 		}
 		changeCh <- true
 	})
-	err = conf.Parge()
+	err = conf.Parse()
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func Load(changeCh chan bool) error {
 	return nil
 }
 
-func (c *RawConfig) Parge() error {
+func (c *RawConfig) Parse() error {
 	App = &Config{
 		Inbound:    c.Inbound,
 		Outbound:   c.Outbound,
