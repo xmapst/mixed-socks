@@ -26,6 +26,10 @@ make
 Inbound:
   Listen: 0.0.0.0
   Port: 8090
+  # Outbound interface name
+  Interface: eth0
+  # fwmark on Linux only
+  RoutingMark: 6666
 
 # RESTful web API listening address
 Controller:
