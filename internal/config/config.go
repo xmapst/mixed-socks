@@ -34,8 +34,10 @@ type Config struct {
 
 // Inbound config
 type Inbound struct {
-	Listen string `yaml:",default=0.0.0.0"`
-	Port   int    `yaml:",default=8090"`
+	Listen      string `yaml:",default=0.0.0.0"`
+	Port        int    `yaml:",default=8090"`
+	Interface   string `yaml:""`
+	RoutingMark int    `yaml:""`
 }
 
 type RawConfig struct {

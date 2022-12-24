@@ -15,6 +15,7 @@ type Base struct {
 	iface string
 	tp    constant.AdapterType
 	udp   bool
+	rmark int
 }
 
 // Name implements constant.ProxyAdapter
@@ -64,7 +65,9 @@ func (b *Base) DialOptions(opts ...dialer.Option) []dialer.Option {
 	if b.iface != "" {
 		opts = append(opts, dialer.WithInterface(b.iface))
 	}
-
+	if b.rmark != 0 {
+		opts = append(opts, dialer.WithRoutingMark(b.rmark))
+	}
 	return opts
 }
 

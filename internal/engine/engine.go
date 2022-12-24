@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	N "github.com/xmapst/mixed-socks/internal/common/net"
 	"github.com/xmapst/mixed-socks/internal/component/auth"
+	"github.com/xmapst/mixed-socks/internal/component/dialer"
 	"github.com/xmapst/mixed-socks/internal/component/iface"
 	"github.com/xmapst/mixed-socks/internal/component/resolver"
 	"github.com/xmapst/mixed-socks/internal/component/trie"
@@ -40,12 +41,13 @@ func Run() error {
 // applyConfig dispatch configure to all parts
 func applyConfig(changeCh chan bool) {
 	for range changeCh {
+		updateGeneral(config.App)
 		updateLogger(config.App.Log)
 		updateWhitelist(config.App.Whitelist)
 		updateUsers(config.App.Users)
 		updateHosts(config.App.Hosts)
-		updateDNS(config.App.DNS)
 		updateInbound(config.App.Inbound)
+		updateDNS(config.App.DNS)
 	}
 }
 
@@ -121,6 +123,20 @@ func updateDNS(c *config.DNS) {
 
 func updateHosts(tree *trie.DomainTrie) {
 	resolver.DefaultHosts = tree
+}
+
+func updateGeneral(cfg *config.Config) {
+	if cfg.Inbound.Interface != "" {
+		iface, err := net.InterfaceByName(cfg.Inbound.Interface)
+		if err == nil {
+			dialer.WithInterface(iface.Name)
+			logrus.Infof("dialer bind to interface: %s", cfg.Inbound.Interface)
+		}
+	}
+	if cfg.Inbound.RoutingMark != 0 {
+		dialer.WithRoutingMark(cfg.Inbound.RoutingMark)
+		logrus.Infof("dialer set fwmark: %#x", cfg.Inbound.RoutingMark)
+	}
 }
 
 func updateInbound(cfg *config.Inbound) {
