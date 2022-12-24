@@ -97,6 +97,7 @@ func viperLoadConf() (*RawConfig, error) {
 			Listen: "0.0.0.0",
 			Port:   8090,
 		},
+		Outbound: &Outbound{},
 		Controller: &Controller{
 			Enable: false,
 		},
