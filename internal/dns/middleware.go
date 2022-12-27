@@ -19,6 +19,7 @@ type (
 func withHosts(hosts *trie.DomainTrie) middleware {
 	return func(next handler) handler {
 		return func(ctx *context.DNSContext, r *dns.Msg) (*dns.Msg, error) {
+            ctx.SetType(context.DNSTypeHost)
 			q := r.Question[0]
 
 			if !isIPRequest(q) {
@@ -48,8 +49,7 @@ func withHosts(hosts *trie.DomainTrie) middleware {
 			} else {
 				return next(ctx, r)
 			}
-			logrus.Infof("[DNS] %s --> %s", q.Name, ip)
-			ctx.SetType(context.DNSTypeHost)
+			logrus.Infof("[DNS] %s --> %s --> %s", ctx.RemoteAddr().String(), strings.TrimSuffix(q.Name, "."), ip)
 			msg.SetRcode(r, dns.RcodeSuccess)
 			msg.Authoritative = true
 			msg.RecursionAvailable = true
@@ -62,6 +62,7 @@ func withHosts(hosts *trie.DomainTrie) middleware {
 func withMapping(mapping *cache.LruCache) middleware {
 	return func(next handler) handler {
 		return func(ctx *context.DNSContext, r *dns.Msg) (*dns.Msg, error) {
+            ctx.SetType(context.DNSTypeCache)
 			q := r.Question[0]
 
 			if !isIPRequest(q) {
@@ -89,8 +90,9 @@ func withMapping(mapping *cache.LruCache) middleware {
 				default:
 					continue
 				}
-				logrus.Infof("[DNS] %s --> %s", q.Name, ip)
+				logrus.Infof("[DNS] %s --> %s --> %s", ctx.RemoteAddr().String(), strings.TrimSuffix(q.Name, "."), ip)
 				mapping.SetWithExpire(ip.String(), host, time.Now().Add(time.Second*time.Duration(ttl)))
+                msg.SetRcode(r, dns.RcodeSuccess)
 			}
 
 			return msg, nil

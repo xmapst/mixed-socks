@@ -21,9 +21,9 @@ type Server struct {
 	handler handler
 }
 
-// ServeDNS implement D.Handler ServeDNS
+// ServeDNS implement dns.Handler ServeDNS
 func (s *Server) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
-	msg, err := handlerWithContext(s.handler, r)
+	msg, err := handlerWithContext(s.handler, w, r)
 	if err != nil {
 		dns.HandleFailed(w, r)
 		return
@@ -32,12 +32,12 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	_ = w.WriteMsg(msg)
 }
 
-func handlerWithContext(handler handler, msg *dns.Msg) (*dns.Msg, error) {
+func handlerWithContext(handler handler, w dns.ResponseWriter, msg *dns.Msg) (*dns.Msg, error) {
 	if len(msg.Question) == 0 {
 		return nil, errors.New("at least one question is required")
 	}
 
-	ctx := context.NewDNSContext(msg)
+	ctx := context.NewDNSContext(w.LocalAddr(), w.RemoteAddr(), msg)
 	return handler(ctx, msg)
 }
 
