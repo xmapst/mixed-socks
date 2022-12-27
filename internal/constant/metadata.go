@@ -2,6 +2,7 @@ package constant
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/xmapst/mixed-socks/internal/transport/socks5"
 	"net"
 	"strconv"
@@ -111,13 +112,16 @@ func (m *Metadata) UDPAddr() *net.UDPAddr {
 }
 
 func (m *Metadata) String() string {
+	if m.Host != "" && m.DstIP != nil {
+		return fmt.Sprintf("%s --> %s", m.DstIP.String(), m.Host)
+	}
 	if m.Host != "" {
 		return m.Host
-	} else if m.DstIP != nil {
-		return m.DstIP.String()
-	} else {
-		return "<nil>"
 	}
+	if m.DstIP != nil {
+		return m.DstIP.String()
+	}
+	return "<nil>"
 }
 
 func (m *Metadata) Valid() bool {

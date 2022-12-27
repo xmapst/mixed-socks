@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	DNSTypeHost = "host"
-	DNSTypeRaw  = "raw"
-    DNSTypeCache= "cache"
+	DNSTypeHost  = "host"
+	DNSTypeRaw   = "raw"
+	DNSTypeCache = "cache"
 )
 
 type DNSContext struct {
